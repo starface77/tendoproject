@@ -2137,35 +2137,6 @@ export const translations = {
       no_orders_found: 'Заказов не найдено',
       no_products_yet: 'У вас пока нет товаров',
       add_first_product: 'Добавить первый товар'
-    },
-    seller: {
-      dashboard: 'Панель продавца',
-      welcome: 'Добро пожаловать в панель управления продавца',
-      overview: 'Обзор',
-      products: 'Товары',
-      orders: 'Заказы',
-      finance: 'Финансы',
-      settings: 'Настройки',
-      total_revenue: 'Общая выручка',
-      active_products: 'Активные товары',
-      quick_actions: 'Быстрые действия',
-      add_product: 'Добавить товар',
-      recent_activity: 'Последняя активность',
-      view_all: 'Показать всё',
-      access_restricted: 'Доступ ограничен',
-      sellers_only: 'Эта область доступна только продавцам',
-      become_seller: 'Стать продавцом',
-      manage_products: 'Управление товарами',
-      process_orders: 'Обработка заказов',
-      view_analytics: 'Посмотреть аналитику',
-      monthly_sales: 'Продажи за месяц',
-      pending_orders: 'Ожидающие заказы',
-      customer_rating: 'Рейтинг клиентов',
-      my_products: 'Мои товары',
-      all_products: 'Все товары',
-      active: 'Активные',
-      out_of_stock: 'Нет в наличии',
-      sold: 'Продано'
     }
   }
 };

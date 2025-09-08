@@ -6,7 +6,7 @@
 import axios from 'axios';
 
 // Базовая конфигурация API (env-driven)
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || (process.env.NODE_ENV === 'production' ? 'https://api.tendo.uz/api/v1' : 'http://localhost:5000/api/v1');
 
 // Создаем экземпляр axios для админки
 const adminApi = axios.create({
@@ -21,14 +21,9 @@ const adminApi = axios.create({
 adminApi.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('admin_token') || localStorage.getItem('adminToken');
-    console.log('🔑 Запрос к:', config.url);
-    console.log('🔑 Токен в localStorage:', token ? 'ЕСТЬ' : 'НЕТ');
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('✅ Токен добавлен в заголовки:', config.headers.Authorization);
-    } else {
-      console.log('❌ Токен не найден');
     }
     return config;
   },
@@ -342,8 +337,6 @@ export const sellerApplicationsApi = {
 
     // Если в ответе есть новый токен, обновляем его через AuthContext
     if (response.data?.data?.token) {
-      console.log('🔄 Обновляем токен после одобрения заявки');
-
       // Импортируем AuthContext для обновления токена
       try {
         // Обновляем токен в localStorage
@@ -354,10 +347,8 @@ export const sellerApplicationsApi = {
         window.dispatchEvent(new CustomEvent('tokenUpdated', {
           detail: { token: response.data.data.token }
         }));
-
-        console.log('✅ Токен обновлен');
       } catch (error) {
-        console.error('❌ Ошибка обновления токена:', error);
+        // Обработка ошибки обновления токена
       }
     }
 

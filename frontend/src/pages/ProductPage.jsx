@@ -35,11 +35,8 @@ const ProductPage = () => {
     try {
       setLoading(true)
       setError(null)
-      
-      console.log('🔍 Загружаем товар с ID:', id)
+
       const response = await productsApi.getProduct(id)
-      console.log('📦 Данные товара:', response)
-      console.log('📝 Product object:', JSON.stringify(response.data.product, null, 2))
       
       if (response.success && response.data && response.data.product) {
         // Адаптируем данные под наш формат
@@ -54,14 +51,12 @@ const ProductPage = () => {
           inStock: response.data.product.inStock !== undefined ? response.data.product.inStock : true,
           name: response.data.product.name || response.data.product.title || 'Без названия'
         }
-        
-        console.log('✅ Адаптированный продукт:', adaptedProduct)
+
         setProduct(adaptedProduct)
       } else {
         throw new Error(t('product_not_found', 'Товар не найден'))
       }
     } catch (err) {
-      console.error('Ошибка загрузки товара:', err)
       setError(err.message || 'Не удалось загрузить товар')
     } finally {
       setLoading(false)
@@ -80,9 +75,7 @@ const ProductPage = () => {
         image: product.images?.[0] || '',
         quantity: quantity
       })
-      console.log('✅ Товар добавлен в корзину')
     } catch (error) {
-      console.error('❌ Ошибка добавления в корзину:', error)
     } finally {
       setAddingToCart(false)
     }
@@ -104,7 +97,6 @@ const ProductPage = () => {
         })
       }
     } catch (error) {
-      console.error('Ошибка работы с избранным:', error)
     }
   }
 
@@ -162,11 +154,10 @@ const ProductPage = () => {
 
   // Проверяем что product корректный
   if (product && typeof product === 'object') {
-    console.log('🔍 Проверяем product fields:', Object.keys(product))
     // Проверяем нет ли проблемных полей
     for (const [key, value] of Object.entries(product)) {
       if (value && typeof value === 'object' && value.name && value.value && value.order && value._id) {
-        console.warn(`⚠️ Проблемное поле ${key}:`, value)
+        // Проблемное поле найдено
       }
     }
   }

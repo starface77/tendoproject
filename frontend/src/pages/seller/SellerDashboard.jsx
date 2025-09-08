@@ -27,16 +27,12 @@ const SellerDashboard = () => {
       setLoading(true);
       setError('');
       
-      console.log('🔄 Загружаем данные дашборда продавца...');
-      
       // Загружаем статистику продавца
       const response = await api.seller.getDashboard();
-      console.log('📊 Ответ от API:', response);
       
       if (response.success) {
         const stats = response.data?.stats;
-        console.log('📈 Статистика:', stats);
-        
+
         if (stats) {
           setMetrics({
             totalRevenue: stats.estimatedRevenue || 0,
@@ -44,9 +40,7 @@ const SellerDashboard = () => {
             activeProducts: stats.activeProducts || 0,
             pendingOrders: stats.lowStock || 0
           });
-          console.log('✅ Данные загружены успешно');
         } else {
-          console.log('⚠️ Stats undefined, используем значения по умолчанию');
           setMetrics({
             totalRevenue: 0,
             totalOrders: 0,

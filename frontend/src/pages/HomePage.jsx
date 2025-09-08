@@ -27,18 +27,12 @@ const HomePage = () => {
     setError(null)
     
     try {
-      console.log('🔍 Проверяем API...')
-      
       // Проверяем доступность API
       const isApiHealthy = await checkApiHealth()
-      console.log('🏥 API статус:', isApiHealthy)
-      
+
       if (isApiHealthy) {
-        console.log('✅ API доступен, загружаем данные...')
-        
         // Загружаем категории
         const categoriesResponse = await categoriesApi.getCategories()
-        console.log('📱 Категории:', categoriesResponse)
 
         // Обрабатываем категории для правильного отображения
         const processedCategories = (categoriesResponse.data || []).map(cat => ({
@@ -51,21 +45,17 @@ const HomePage = () => {
         
         // Загружаем популярные товары (используем обычные товары вместо featured)
         const productsResponse = await productsApi.getProducts({ limit: 8, sort: '-createdAt' })
-        console.log('🛍️ Товары:', productsResponse)
         setFeaturedProducts(productsResponse.data || [])
 
         // Загружаем баннеры
         const bannersResponse = await bannersApi.getBanners()
-        console.log('🎯 Баннеры:', bannersResponse)
         const bannersData = bannersResponse.data || []
-        console.log('🎯 Установка баннеров:', bannersData)
         setBanners(bannersData)
       } else {
         throw new Error('API недоступен')
       }
       
     } catch (error) {
-      console.error('Ошибка загрузки данных:', error)
       setError('Не удалось загрузить данные. Проверьте подключение к интернету.')
       
       // Показываем пустую страницу если API недоступен

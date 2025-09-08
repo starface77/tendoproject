@@ -95,12 +95,10 @@ export const useAuth = () => {
 
 // Провайдер контекста аутентификации
 export const AuthProvider = ({ children }) => {
-  console.log('AuthContext: AuthProvider rendering')
   const [state, dispatch] = useReducer(authReducer, initialState)
 
   // Загружаем пользователя из localStorage при монтировании
   useEffect(() => {
-    console.log('AuthContext: useEffect triggered, calling loadUser')
     loadUser()
   }, [])
 
@@ -110,14 +108,11 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token')
 
       if (token) {
-        console.log('AuthContext: Checking token validity...')
-
         try {
           // Проверяем токен через API
           const response = await authApi.verifyToken()
 
           if (response.success && response.user) {
-            console.log('AuthContext: Token valid, loading user:', response.user)
             // Сохраняем актуальные данные пользователя
             localStorage.setItem('user', JSON.stringify(response.user))
             dispatch({ type: AUTH_ACTIONS.SET_USER, payload: response.user })
@@ -125,16 +120,12 @@ export const AuthProvider = ({ children }) => {
             throw new Error('Invalid token response')
           }
         } catch (error) {
-          console.error('AuthContext: Token validation failed:', error.message)
-
           // Проверяем тип ошибки
           if (error.response?.status === 401) {
-            console.log('AuthContext: Token expired or invalid, clearing data')
             // Токен истек или недействителен
             // Попробуем мягкий fallback на локальные данные пользователя, если есть
             const storedUser = (() => { try { return JSON.parse(localStorage.getItem('user')) } catch { return null } })()
             if (storedUser) {
-              console.warn('AuthContext: using stored user fallback')
               dispatch({ type: AUTH_ACTIONS.SET_USER, payload: storedUser })
             } else {
               localStorage.removeItem('token')
@@ -143,7 +134,6 @@ export const AuthProvider = ({ children }) => {
             }
           } else {
             // Другая ошибка (сеть, сервер), не очищаем токен
-            console.warn('AuthContext: Network/server error, keeping token for retry')
             // Используем локальные данные пользователя, если есть
             const storedUser = (() => { try { return JSON.parse(localStorage.getItem('user')) } catch { return null } })()
             if (storedUser) {
@@ -154,11 +144,9 @@ export const AuthProvider = ({ children }) => {
           }
         }
       } else {
-        console.log('AuthContext: No token found')
         dispatch({ type: AUTH_ACTIONS.LOGOUT })
       }
     } catch (error) {
-      console.error('Ошибка загрузки пользователя:', error)
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       dispatch({ type: AUTH_ACTIONS.LOGOUT })
@@ -171,12 +159,8 @@ export const AuthProvider = ({ children }) => {
     try {
       dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true })
 
-      console.log('🔐 AuthContext: Попытка входа для:', credentials.email)
-
       // Реальный API вызов
       const response = await authApi.login(credentials)
-      
-      console.log('✅ AuthContext: Ответ API:', response)
       
       if (response.success && response.token && response.user) {
         // Сохраняем токен и пользователя
@@ -197,8 +181,7 @@ export const AuthProvider = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('❌ AuthContext: Ошибка входа:', error)
-      return { 
+      return {
         success: false, 
         error: error.message || 'Ошибка входа в систему'
       }
@@ -210,13 +193,9 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true })
-      
-      console.log('📝 AuthContext: Попытка регистрации:', userData)
-      
+
       // Реальный API вызов
       const response = await authApi.register(userData)
-      
-      console.log('✅ AuthContext: Ответ API регистрации:', response)
       
       if (response.success && response.token && response.user) {
         // Сохраняем токен и пользователя
@@ -237,8 +216,7 @@ export const AuthProvider = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('❌ AuthContext: Ошибка регистрации:', error)
-      return { 
+      return {
         success: false, 
         error: error.message || 'Ошибка создания аккаунта'
       }
@@ -252,7 +230,6 @@ export const AuthProvider = ({ children }) => {
       // Отправляем запрос на выход
       await authApi.logout()
     } catch (error) {
-      console.warn('Ошибка при выходе:', error.message)
     } finally {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
@@ -273,8 +250,7 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: AUTH_ACTIONS.UPDATE_USER, payload: response.data })
       return { success: true }
     } catch (error) {
-      console.error('Ошибка обновления профиля:', error)
-      return { 
+      return {
         success: false, 
         error: error.message || 'Ошибка обновления профиля'
       }
@@ -291,8 +267,7 @@ export const AuthProvider = ({ children }) => {
       const response = await usersApi.updateProfile(userData)
       return { success: true, data: response.data }
     } catch (error) {
-      console.error('Ошибка обновления пользователя:', error)
-      return { 
+      return {
         success: false, 
         error: error.message || 'Ошибка обновления пользователя'
       }

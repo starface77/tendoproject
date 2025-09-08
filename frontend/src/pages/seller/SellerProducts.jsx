@@ -24,12 +24,11 @@ const SellerProducts = () => {
     try {
       setLoading(true);
       const response = await api.seller.getProducts();
-      
+
       if (response.success) {
         setProducts(response.data || response.products || []);
       }
     } catch (error) {
-      console.error('Ошибка загрузки товаров:', error);
       setProducts([]);
     } finally {
       setLoading(false);
@@ -51,7 +50,6 @@ const SellerProducts = () => {
         alert('Ошибка при удалении товара');
       }
     } catch (error) {
-      console.error('Ошибка удаления товара:', error);
       alert('Ошибка при удалении товара');
     }
   };
@@ -70,7 +68,6 @@ const SellerProducts = () => {
         alert('Ошибка при изменении статуса товара');
       }
     } catch (error) {
-      console.error('Ошибка изменения статуса:', error);
       alert('Ошибка при изменении статуса товара');
     }
   };

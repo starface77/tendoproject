@@ -5,12 +5,12 @@
 
 import axios from 'axios'
 
-// Базовая конфигурация API (env-driven). В dev используем прокси Vite через относительный путь
+// Базовая конфигурация API (env-driven)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.MODE === 'production' ? 'https://api.tendo.uz' : '')
 
 // Создаем экземпляр axios с базовой конфигурацией
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api/v1`,
+  baseURL: import.meta.env.MODE === 'production' ? `${API_BASE_URL}/api/v1` : '/api/v1',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.warn('API returned 401 Unauthorized - token may be invalid')
+      // Token may be invalid
     }
     return Promise.reject(error)
   }
@@ -44,8 +44,6 @@ api.interceptors.response.use(
 
 // Обертка для обработки ошибок API
 const handleApiError = (error) => {
-  console.error('API Error:', error)
-  
   if (error.code === 'ECONNABORTED') {
     throw new Error('Превышено время ожидания. Проверьте подключение к интернету.')
   }
