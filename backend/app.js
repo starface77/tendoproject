@@ -121,6 +121,9 @@ const authenticateToken = (req, res, next) => {
 // Создание Express приложения
 const app = express();
 
+// 🔐 TRUST PROXY (для корректной работы с Nginx proxy)
+app.set('trust proxy', 1); // Доверяем первому прокси
+
 // 🔐 БЕЗОПАСНОСТЬ
 app.use(helmet({
   contentSecurityPolicy: false, // Отключаем CSP для гибкости

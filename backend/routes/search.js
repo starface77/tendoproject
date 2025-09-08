@@ -48,3 +48,4 @@ router.post('/analytics', logSearchQuery);
 
 module.exports = router;
 
+
