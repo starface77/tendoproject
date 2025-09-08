@@ -455,3 +455,5 @@ const AdvancedSearch = ({ onSearch, onFilterChange, initialFilters = {} }) => {
 
 export default AdvancedSearch;
 
+
+

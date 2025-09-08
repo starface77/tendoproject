@@ -30,20 +30,14 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      return (
-        <ErrorFallback 
-          onRetry={this.handleRetry}
-          error={this.state.error}
-          errorInfo={this.state.errorInfo}
-        />
-      );
+      return <ErrorFallback onRetry={this.handleRetry} />;
     }
 
     return this.props.children;
   }
 }
 
-const ErrorFallback = ({ onRetry, error, errorInfo }) => {
+const ErrorFallback = ({ onRetry }) => {
   const { t } = useLanguage();
 
   return (
@@ -84,8 +78,8 @@ const ErrorFallback = ({ onRetry, error, errorInfo }) => {
               {t('errorBoundary.showDetails', 'Показать детали ошибки')}
             </summary>
             <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32">
-              {error && error.toString()}
-              {errorInfo && errorInfo.componentStack}
+              {this.state.error && this.state.error.toString()}
+              {this.state.errorInfo && this.state.errorInfo.componentStack}
             </pre>
           </details>
         )}

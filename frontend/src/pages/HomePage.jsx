@@ -114,7 +114,7 @@ const HomePage = () => {
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('homepage.popular_categories')}</h2>
           <Link to="/catalog" className="text-blue-700 hover:text-blue-800 font-medium flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base">
-            <span className="hidden sm:inline">{t('view_all')}</span>
+            <span className="hidden sm:inline">{t('homepage.view_all', 'Смотреть все')}</span>
             <span className="sm:hidden">Все</span>
             <FiArrowRight className="h-4 w-4" />
           </Link>
@@ -134,7 +134,7 @@ const HomePage = () => {
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('homepage.recommended_products')}</h2>
             <Link to="/catalog" className="text-blue-700 hover:text-blue-800 font-medium flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base">
-              <span className="hidden sm:inline">{t('homepage.view_all')}</span>
+              <span className="hidden sm:inline">{t('homepage.view_all', 'Смотреть все')}</span>
               <span className="sm:hidden">Все</span>
               <FiArrowRight className="h-4 w-4" />
             </Link>

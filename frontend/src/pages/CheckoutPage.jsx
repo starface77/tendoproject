@@ -163,7 +163,7 @@ const CheckoutPage = () => {
   const submitOrder = async () => {
     setLoading(true)
     try {
-      // TODO: Отправить заказ на сервер
+      // Создаем заказ
       const order = {
         items: cartItems,
         address: orderData.address,
@@ -174,28 +174,39 @@ const CheckoutPage = () => {
       }
 
       console.log('Отправляем заказ:', order)
-      
-      // Имитация отправки
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Сохраняем заказ локально
-      const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]')
-      savedOrders.push({
-        ...order,
-        id: Date.now(),
-        status: 'pending'
-      })
-      localStorage.setItem('orders', JSON.stringify(savedOrders))
-      
-      // Очищаем корзину
-      clearCart()
-      
-      // Переходим на страницу успеха
-      navigate('/order-success')
-      
+
+      // Имитация отправки заказа (можно заменить на реальный API вызов)
+      try {
+        // Здесь можно добавить реальный API вызов
+        // const response = await ordersApi.createOrder(order)
+
+        // Имитация задержки
+        await new Promise(resolve => setTimeout(resolve, 2000))
+
+        // Сохраняем заказ локально
+        const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]')
+        savedOrders.push({
+          ...order,
+          id: Date.now(),
+          status: 'pending'
+        })
+        localStorage.setItem('orders', JSON.stringify(savedOrders))
+
+        // Очищаем корзину
+        clearCart()
+
+        // Переходим на страницу успеха
+        navigate('/order-success')
+
+      } catch (apiError) {
+        console.error('Ошибка API:', apiError)
+        alert(t('order_error', 'Ошибка связи с сервером. Попробуйте еще раз.'))
+        return
+      }
+
     } catch (error) {
       console.error('Ошибка оформления заказа:', error)
-      alert(t('order_error', 'Произошла ошибка при оформлении заказа'))
+      alert(t('order_validation_error', 'Проверьте правильность введенных данных'))
     } finally {
       setLoading(false)
     }

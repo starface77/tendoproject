@@ -159,13 +159,13 @@ const BecomeSellerPage = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center text-blue-600 hover:text-blue-700 transition-colors mb-6"
-          >
-            <FiArrowLeft className="mr-2" />
-{t('back_to_profile', 'Назад в профиль')}
-          </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center text-blue-600 hover:text-blue-700 transition-colors mb-6"
+            >
+              <FiArrowLeft className="mr-2" />
+              {t('back_to_profile', 'Назад')}
+            </button>
           
           <div className="flex items-start space-x-4 mb-6">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
@@ -173,10 +173,10 @@ const BecomeSellerPage = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-{t('seller_app.title')}
+                {t('seller_app.title', 'Стать продавцом')}
               </h1>
               <p className="text-xl text-gray-600">
-                {t('seller_app.subtitle')}
+                {t('seller_app.subtitle', 'Присоединяйтесь к нашей платформе и начните продавать свои товары тысячам покупателей')}
               </p>
             </div>
           </div>
@@ -190,9 +190,9 @@ const BecomeSellerPage = () => {
           )}
 
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('seller_app.application_form')}</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('seller_app.application_form', 'Заявка на продавца')}</h2>
             <p className="text-gray-600">
-              {t('seller_app.application_description')}
+              {t('seller_app.application_description', 'Заполните форму ниже, чтобы стать продавцом на нашей платформе')}
             </p>
           </div>
 

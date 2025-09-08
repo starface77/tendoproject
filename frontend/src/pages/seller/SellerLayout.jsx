@@ -99,8 +99,8 @@ const SellerLayout = () => {
                   Продавец
                 </h1>
                 <p className="text-sm text-gray-500">{user?.firstName || user?.name || 'Панель'}</p>
-        </div>
-      </div>
+              </div>
+            </div>
 
             {/* Simple Navigation */}
             <nav className="flex-1 px-4 space-y-1">
@@ -193,8 +193,8 @@ const SellerLayout = () => {
                 </Link>
               );
             })}
-    </div>
-  </div>
+          </div>
+        </div>
       </div>
     </div>
   );
