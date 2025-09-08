@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chexol.uz - Админ панель</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #F2D024;
+            --primary-dark: #D69E2E;
+            --secondary: #1A202C;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-700: #374151;
+            --gray-800: #1F2937;
+            --gray-900: #111827;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+        }
+        
+        .bg-primary { background-color: var(--primary); }
+        .bg-primary:hover { background-color: var(--primary-dark); }
+        .text-primary { color: var(--primary); }
+        .border-primary { border-color: var(--primary); }
+        
+        .sidebar {
+            background: linear-gradient(180deg, var(--secondary) 0%, var(--gray-800) 100%);
+            min-height: 100vh;
+        }
+        
+        .nav-item {
+            transition: all 0.2s ease;
+            border-radius: 0.5rem;
+            margin: 0.25rem;
+        }
+        
+        .nav-item:hover {
+            background: rgba(242, 208, 36, 0.1);
+            transform: translateX(4px);
+        }
+        
+        .nav-item.active {
+            background: var(--primary);
+            color: var(--gray-900);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--gray-900);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="loading mb-4"></div>
+            <h2 class="text-xl text-white font-semibold">Chexol.uz Admin</h2>
+            <p class="text-gray-300">Загрузка админ панели...</p>
+        </div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginForm" class="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-40 hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold text-gray-900">🛠️ Админ панель</h1>
+                <p class="text-gray-600">Chexol.uz</p>
+            </div>
+            
+            <form id="loginFormElement">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">Email</label>
+                    <input type="email" id="email" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">Пароль</label>
+                    <input type="password" id="password" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                </div>
+                
+                <button type="submit" id="loginBtn"
+                        class="w-full bg-primary text-gray-900 font-semibold py-2 px-4 rounded-lg hover:bg-primary-dark transition duration-200">
+                    Войти
+                </button>
+            </form>
+            
+            <div id="loginError" class="mt-4 text-red-600 text-sm hidden"></div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="adminApp" class="flex h-screen hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 text-white p-6">
+            <div class="mb-8">
+                <h1 class="text-xl font-bold text-primary">🛠️ Chexol.uz</h1>
+                <p class="text-gray-400 text-sm">Админ панель</p>
+            </div>
+            
+            <nav class="space-y-2">
+                <a href="#dashboard" class="nav-item active flex items-center px-4 py-3 text-white">
+                    <i class="fas fa-tachometer-alt mr-3"></i>
+                    Дашборд
+                </a>
+                <a href="#orders" class="nav-item flex items-center px-4 py-3 text-white">
+                    <i class="fas fa-shopping-cart mr-3"></i>
+                    Заказы
+                    <span id="pendingOrdersCount" class="ml-auto bg-red-500 text-xs px-2 py-1 rounded-full hidden"></span>
+                </a>
+                <a href="#products" class="nav-item flex items-center px-4 py-3 text-white">
+                    <i class="fas fa-box mr-3"></i>
+                    Товары
+                </a>
+                <a href="#categories" class="nav-item flex items-center px-4 py-3 text-white">
+                    <i class="fas fa-tags mr-3"></i>
+                    Категории
+                </a>
+                <a href="#users" class="nav-item flex items-center px-4 py-3 text-white">
+                    <i class="fas fa-users mr-3"></i>
+                    Пользователи
+                </a>
+                <a href="#reviews" class="nav-item flex items-center px-4 py-3 text-white">
+                    <i class="fas fa-star mr-3"></i>
+                    Отзывы
+                    <span id="pendingReviewsCount" class="ml-auto bg-yellow-500 text-xs px-2 py-1 rounded-full hidden"></span>
+                </a>
+                <a href="#analytics" class="nav-item flex items-center px-4 py-3 text-white">
+                    <i class="fas fa-chart-bar mr-3"></i>
+                    Аналитика
+                </a>
+                <a href="#settings" class="nav-item flex items-center px-4 py-3 text-white">
+                    <i class="fas fa-cog mr-3"></i>
+                    Настройки
+                </a>
+            </nav>
+            
+            <div class="mt-auto pt-6">
+                <div class="border-t border-gray-600 pt-4">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-gray-900 font-semibold">
+                            <span id="userInitials">A</span>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium" id="userName">Администратор</p>
+                            <p class="text-xs text-gray-400" id="userRole">admin</p>
+                        </div>
+                    </div>
+                    <button id="logoutBtn" class="mt-3 w-full text-left px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Выход
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <h2 id="pageTitle" class="text-2xl font-semibold text-gray-900">Дашборд</h2>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- Notifications -->
+                        <div class="relative">
+                            <button id="notificationsBtn" class="p-2 text-gray-400 hover:text-gray-600 relative">
+                                <i class="fas fa-bell text-xl"></i>
+                                <span id="notificationDot" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full hidden"></span>
+                            </button>
+                            
+                            <div id="notificationsPanel" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border hidden z-10">
+                                <div class="p-4 border-b">
+                                    <h3 class="font-semibold">Уведомления</h3>
+                                </div>
+                                <div id="notificationsList" class="max-h-64 overflow-y-auto"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-sm text-gray-500">
+                            <span id="currentTime"></span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main id="mainContent" class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+                <!-- Dashboard Content -->
+                <div id="dashboardContent" class="fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Stats Cards -->
+                        <div class="card stat-card p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-800 text-sm font-medium">Всего заказов</p>
+                                    <p class="text-3xl font-bold" id="totalOrders">-</p>
+                                </div>
+                                <i class="fas fa-shopping-cart text-2xl opacity-80"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-green-500 text-white p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-green-100 text-sm font-medium">Доходы</p>
+                                    <p class="text-3xl font-bold" id="totalRevenue">-</p>
+                                </div>
+                                <i class="fas fa-dollar-sign text-2xl opacity-80"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-blue-500 text-white p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-blue-100 text-sm font-medium">Пользователи</p>
+                                    <p class="text-3xl font-bold" id="totalUsers">-</p>
+                                </div>
+                                <i class="fas fa-users text-2xl opacity-80"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-purple-500 text-white p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-purple-100 text-sm font-medium">Товары</p>
+                                    <p class="text-3xl font-bold" id="totalProducts">-</p>
+                                </div>
+                                <i class="fas fa-box text-2xl opacity-80"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="card p-6">
+                            <h3 class="text-lg font-semibold mb-4">Последние заказы</h3>
+                            <div id="recentOrders" class="space-y-3">
+                                <div class="text-center text-gray-500 py-8">
+                                    <div class="loading mx-auto mb-2"></div>
+                                    <p>Загрузка...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card p-6">
+                            <h3 class="text-lg font-semibold mb-4">Топ товары</h3>
+                            <div id="topProducts" class="space-y-3">
+                                <div class="text-center text-gray-500 py-8">
+                                    <div class="loading mx-auto mb-2"></div>
+                                    <p>Загрузка...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Other content sections will be loaded here -->
+                <div id="otherContent" class="hidden">
+                    <div class="text-center py-12">
+                        <i class="fas fa-tools text-4xl text-gray-400 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-700">Раздел в разработке</h3>
+                        <p class="text-gray-500">Этот функционал будет добавлен в ближайшее время</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+</body>
+</html>

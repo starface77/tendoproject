@@ -1,0 +1,1345 @@
+/**
+ * 🚀 CHEXOL.UZ BACKEND API
+ * Основной файл сервера для интернет-магазина чехлов
+ */
+
+// Загружаем переменные окружения в самом начале
+require('dotenv').config();
+
+// Переменные окружения загружены
+const jwt = require('jsonwebtoken');
+
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
+
+// Импорт конфигураций
+const { connectDB } = require('./config/database');
+
+// Импорт маршрутов
+const authRoutes = require('./routes/auth');
+const productRoutes = require('./routes/products');
+const categoryRoutes = require('./routes/categories');
+const orderRoutes = require('./routes/orders');
+const userRoutes = require('./routes/users');
+const uploadRoutes = require('./routes/upload');
+const cityRoutes = require('./routes/cities');
+const sellerApplicationRoutes = require('./routes/sellerApplications');
+const sellerRoutes = require('./routes/sellers');
+const chatRoutes = require('./routes/chat');
+const favoritesRoutes = require('./routes/favorites');
+const reviewsRoutes = require('./routes/reviews');
+const contactRoutes = require('./routes/contacts');
+
+// Импорт middleware
+const errorHandler = require('./middleware/errorHandler');
+const notFound = require('./middleware/notFound');
+
+// JWT секрет (демо значение для разработки)
+const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_for_demo_development_only_change_in_production_2025';
+
+// Конфигурация запуска проекта
+const LAUNCH_CONFIG = {
+  isLaunched: process.env.IS_LAUNCHED === 'true' || false,
+  launchDate: process.env.LAUNCH_DATE ? new Date(process.env.LAUNCH_DATE) : new Date('2025-09-15T00:00:00Z'), // Дата запуска
+  preLaunchEnabled: process.env.PRE_LAUNCH_ENABLED !== 'false' // По умолчанию включена
+};
+
+// Функция генерации JWT токена
+const generateToken = (userData) => {
+  return jwt.sign(userData, JWT_SECRET, { expiresIn: '7d' });
+};
+
+// Middleware для проверки JWT
+const authenticateToken = (req, res, next) => {
+  try {
+    let token;
+
+    // Получение токена из заголовка Authorization
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
+    // Или из cookies
+    else if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: 'Токен не предоставлен'
+      });
+    }
+
+    // Верификация токена
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (err) {
+        console.log('JWT Error:', err.message);
+
+        if (err.name === 'TokenExpiredError') {
+          return res.status(401).json({
+            success: false,
+            error: 'Срок действия токена истек',
+            code: 'TOKEN_EXPIRED'
+          });
+        }
+
+        if (err.name === 'JsonWebTokenError') {
+          return res.status(401).json({
+            success: false,
+            error: 'Недействительный токен',
+            code: 'INVALID_TOKEN'
+          });
+        }
+
+        return res.status(401).json({
+          success: false,
+          error: 'Ошибка верификации токена',
+          code: 'VERIFICATION_ERROR'
+        });
+      }
+
+      // Проверка срока действия
+      if (decoded.exp && Date.now() >= decoded.exp * 1000) {
+        return res.status(401).json({
+          success: false,
+          error: 'Срок действия токена истек',
+          code: 'TOKEN_EXPIRED'
+        });
+      }
+
+      req.user = decoded;
+      next();
+    });
+
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Ошибка сервера при проверке авторизации'
+    });
+  }
+};
+
+// Создание Express приложения
+const app = express();
+
+// 🔐 БЕЗОПАСНОСТЬ
+app.use(helmet({
+  contentSecurityPolicy: false, // Отключаем CSP для гибкости
+  crossOriginEmbedderPolicy: false
+}));
+
+// 📊 СЖАТИЕ ОТВЕТОВ
+app.use(compression());
+
+// 🌐 CORS НАСТРОЙКИ (ДЛЯ МОБИЛЬНОГО ПРИЛОЖЕНИЯ)
+const corsOptions = {
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    process.env.ADMIN_FRONTEND_URL || 'http://localhost:3001',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173', // Vite dev server
+    'http://26.160.28.208:3000', // Admin dashboard IP
+    'http://26.160.28.208:3001', // Frontend IP
+    'http://26.160.28.208:5173', // Vite dev server IP
+    // Мобильные эмуляторы
+    'http://10.0.2.2:5000',
+    'http://127.0.0.1:5000',
+    'http://localhost:5000',
+    // Разрешаем все для разработки
+    /^https?:\/\/.*$/
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+// 🚦 ОГРАНИЧЕНИЕ ЗАПРОСОВ (БОЛЕЕ МЯГКИЕ ДЛЯ РАЗРАБОТКИ)
+const limiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 минута вместо 15
+  max: 1000, // 1000 запросов вместо 100
+  message: {
+    error: 'Слишком много запросов, попробуйте позже',
+    message: 'Too many requests, please try again later'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// 🔐 БОЛЕЕ МЯГКИЕ ОГРАНИЧЕНИЯ ДЛЯ АДМИН АУТЕНТИФИКАЦИИ
+const adminAuthLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 минута
+  max: 100, // 100 попыток за минуту
+  message: {
+    error: 'Слишком много попыток входа, попробуйте позже',
+    message: 'Too many login attempts, please try again later'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Применяем специальный лимит для админ аутентификации
+app.use('/api/v1/auth/admin', adminAuthLimiter);
+
+// Обычный лимит для остальных API
+app.use('/api/', limiter);
+
+// 📝 ЛОГИРОВАНИЕ
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined'));
+}
+
+// 🔄 ПАРСИНГ ДАННЫХ
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 📍 API МАРШРУТЫ
+const apiVersion = process.env.API_VERSION || 'v1';
+
+// 🚀 MIDDLEWARE ДЛЯ PRE-LAUNCH СТРАНИЦЫ
+const preLaunchMiddleware = (req, res, next) => {
+  // Пропускаем API запросы
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+
+  // Пропускаем статические файлы
+  if (req.path.startsWith('/uploads') || req.path.startsWith('/public')) {
+    return next();
+  }
+
+  // Пропускаем health check
+  if (req.path === '/health') {
+    return next();
+  }
+
+  // Если проект уже запущен или pre-launch отключен
+  if (LAUNCH_CONFIG.isLaunched || !LAUNCH_CONFIG.preLaunchEnabled) {
+    return next();
+  }
+
+  // Проверяем, истекло ли время запуска
+  const now = new Date();
+  if (now >= LAUNCH_CONFIG.launchDate) {
+    console.log('🚀 Время запуска наступило! Проект запущен.');
+    LAUNCH_CONFIG.isLaunched = true;
+    return next();
+  }
+
+  // Показываем pre-launch страницу
+  const timeLeft = LAUNCH_CONFIG.launchDate - now;
+  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+  res.send(`
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Tendo Market - Скоро запуск!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .timer {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+
+        .time-block {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            min-width: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .time-block:hover {
+            transform: scale(1.05);
+        }
+
+        .time-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .time-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            margin: 2rem 0;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            border-radius: 2px;
+            animation: progress 2s ease-in-out infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .social-links {
+            margin-top: 3rem;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1rem;
+            font-size: 1.5rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .social-links a:hover {
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .timer {
+                gap: 0.5rem;
+            }
+
+            .time-block {
+                min-width: 80px;
+                padding: 1rem;
+            }
+
+            .time-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚀</div>
+        <h1>Запуск проекта через:</h1>
+
+        <div class="timer">
+            <div class="time-block">
+                <span class="time-value" id="days">${days}</span>
+                <span class="time-label">дней</span>
+            </div>
+            <div class="time-block">
+                <span class="time-value" id="hours">${hours}</span>
+                <span class="time-label">часов</span>
+            </div>
+            <div class="time-block">
+                <span class="time-value" id="minutes">${minutes}</span>
+                <span class="time-label">минут</span>
+            </div>
+            <div class="time-block">
+                <span class="time-value" id="seconds">${seconds}</span>
+                <span class="time-label">секунд</span>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+
+        <div class="message">
+            <p>Мы готовим что-то невероятное для вас!</p>
+            <p>Следите за обновлениями и будьте первыми, кто узнает о запуске.</p>
+        </div>
+
+        <div class="social-links">
+            <a href="#" title="Telegram">📱</a>
+            <a href="#" title="Instagram">📸</a>
+            <a href="#" title="Facebook">📘</a>
+        </div>
+    </div>
+
+    <script>
+        function updateTimer() {
+            const now = new Date().getTime();
+            const launchDate = new Date('${LAUNCH_CONFIG.launchDate.toISOString()}').getTime();
+            const timeLeft = launchDate - now;
+
+            if (timeLeft <= 0) {
+                // Время вышло - перезагрузка страницы
+                window.location.reload();
+                return;
+            }
+
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+            document.getElementById('seconds').textContent = seconds;
+        }
+
+        // Обновление таймера каждую секунду
+        setInterval(updateTimer, 1000);
+
+        // Анимация загрузки
+        let progress = 0;
+        setInterval(() => {
+            progress = (progress + 1) % 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+        }, 50);
+    </script>
+</body>
+</html>
+  `);
+};
+
+// Применяем pre-launch middleware для всех запросов
+app.use(preLaunchMiddleware);
+
+// 🚀 MIDDLEWARE ДЛЯ PRE-LAUNCH СТРАНИЦЫ
+const preLaunchMiddleware = (req, res, next) => {
+  // Пропускаем API запросы
+  if (req.path.startsWith(`/api/${apiVersion}`)) {
+    return next();
+  }
+
+  // Пропускаем статические файлы
+  if (req.path.startsWith('/uploads') || req.path.startsWith('/public')) {
+    return next();
+  }
+
+  // Пропускаем health check
+  if (req.path === '/health' || req.path === `/api/${apiVersion}/health`) {
+    return next();
+  }
+
+  // Если проект уже запущен или pre-launch отключен
+  if (LAUNCH_CONFIG.isLaunched || !LAUNCH_CONFIG.preLaunchEnabled) {
+    return next();
+  }
+
+  // Проверяем, истекло ли время запуска
+  const now = new Date();
+  if (now >= LAUNCH_CONFIG.launchDate) {
+    console.log('🚀 Время запуска наступило! Проект запущен.');
+    LAUNCH_CONFIG.isLaunched = true;
+    return next();
+  }
+
+  // Показываем pre-launch страницу
+  const timeLeft = LAUNCH_CONFIG.launchDate - now;
+  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+  res.send(`
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Tendo Market - Скоро запуск!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .timer {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+
+        .time-block {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            min-width: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .time-block:hover {
+            transform: scale(1.05);
+        }
+
+        .time-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .time-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            margin: 2rem 0;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            border-radius: 2px;
+            animation: progress 2s ease-in-out infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .social-links {
+            margin-top: 3rem;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1rem;
+            font-size: 1.5rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .social-links a:hover {
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .timer {
+                gap: 0.5rem;
+            }
+
+            .time-block {
+                min-width: 80px;
+                padding: 1rem;
+            }
+
+            .time-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚀</div>
+        <h1>Запуск проекта через:</h1>
+
+        <div class="timer">
+            <div class="time-block">
+                <span class="time-value" id="days">${days}</span>
+                <span class="time-label">дней</span>
+            </div>
+            <div class="time-block">
+                <span class="time-value" id="hours">${hours}</span>
+                <span class="time-label">часов</span>
+            </div>
+            <div class="time-block">
+                <span class="time-value" id="minutes">${minutes}</span>
+                <span class="time-label">минут</span>
+            </div>
+            <div class="time-block">
+                <span class="time-value" id="seconds">${seconds}</span>
+                <span class="time-label">секунд</span>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+
+        <div class="message">
+            <p>Мы готовим что-то невероятное для вас!</p>
+            <p>Следите за обновлениями и будьте первыми, кто узнает о запуске.</p>
+        </div>
+
+        <div class="social-links">
+            <a href="#" title="Telegram">📱</a>
+            <a href="#" title="Instagram">📸</a>
+            <a href="#" title="Facebook">📘</a>
+        </div>
+    </div>
+
+    <script>
+        function updateTimer() {
+            const now = new Date().getTime();
+            const launchDate = new Date('${LAUNCH_CONFIG.launchDate.toISOString()}').getTime();
+            const timeLeft = launchDate - now;
+
+            if (timeLeft <= 0) {
+                // Время вышло - перезагрузка страницы
+                window.location.reload();
+                return;
+            }
+
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+            document.getElementById('seconds').textContent = seconds;
+        }
+
+        // Обновление таймера каждую секунду
+        setInterval(updateTimer, 1000);
+
+        // Анимация загрузки
+        let progress = 0;
+        setInterval(() => {
+            progress = (progress + 1) % 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+        }, 50);
+    </script>
+</body>
+</html>
+  `);
+};
+
+// Применяем pre-launch middleware для всех запросов
+app.use(preLaunchMiddleware);
+
+// 🏥 HEALTH CHECK ENDPOINT
+app.get(`/api/${apiVersion}/health`, (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'Tendo Market API работает',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// 🚀 MIDDLEWARE ДЛЯ PRE-LAUNCH СТРАНИЦЫ
+const preLaunchMiddleware = (req, res, next) => {
+  // Пропускаем API запросы
+  if (req.path.startsWith(`/api/${apiVersion}`)) {
+    return next();
+  }
+
+  // Пропускаем статические файлы
+  if (req.path.startsWith('/uploads') || req.path.startsWith('/public')) {
+    return next();
+  }
+
+  // Пропускаем health check
+  if (req.path === '/health' || req.path === `/api/${apiVersion}/health`) {
+    return next();
+  }
+
+  // Если проект уже запущен или pre-launch отключен
+  if (LAUNCH_CONFIG.isLaunched || !LAUNCH_CONFIG.preLaunchEnabled) {
+    return next();
+  }
+
+  // Проверяем, истекло ли время запуска
+  const now = new Date();
+  if (now >= LAUNCH_CONFIG.launchDate) {
+    console.log('🚀 Время запуска наступило! Проект запущен.');
+    LAUNCH_CONFIG.isLaunched = true;
+    return next();
+  }
+
+  // Показываем pre-launch страницу
+  const timeLeft = LAUNCH_CONFIG.launchDate - now;
+  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+  res.send(`
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Tendo Market - Скоро запуск!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .timer {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+
+        .time-block {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            min-width: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .time-block:hover {
+            transform: scale(1.05);
+        }
+
+        .time-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .time-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            margin: 2rem 0;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            border-radius: 2px;
+            animation: progress 2s ease-in-out infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .social-links {
+            margin-top: 3rem;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1rem;
+            font-size: 1.5rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .social-links a:hover {
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .timer {
+                gap: 0.5rem;
+            }
+
+            .time-block {
+                min-width: 80px;
+                padding: 1rem;
+            }
+
+            .time-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚀</div>
+        <h1>Запуск проекта через:</h1>
+
+        <div class="timer">
+            <div class="time-block">
+                <span class="time-value" id="days">${days}</span>
+                <span class="time-label">дней</span>
+            </div>
+            <div class="time-block">
+                <span class="time-value" id="hours">${hours}</span>
+                <span class="time-label">часов</span>
+            </div>
+            <div class="time-block">
+                <span class="time-value" id="minutes">${minutes}</span>
+                <span class="time-label">минут</span>
+            </div>
+            <div class="time-block">
+                <span class="time-value" id="seconds">${seconds}</span>
+                <span class="time-label">секунд</span>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+
+        <div class="message">
+            <p>Мы готовим что-то невероятное для вас!</p>
+            <p>Следите за обновлениями и будьте первыми, кто узнает о запуске.</p>
+        </div>
+
+        <div class="social-links">
+            <a href="#" title="Telegram">📱</a>
+            <a href="#" title="Instagram">📸</a>
+            <a href="#" title="Facebook">📘</a>
+        </div>
+    </div>
+
+    <script>
+        function updateTimer() {
+            const now = new Date().getTime();
+            const launchDate = new Date('${LAUNCH_CONFIG.launchDate.toISOString()}').getTime();
+            const timeLeft = launchDate - now;
+
+            if (timeLeft <= 0) {
+                // Время вышло - перезагрузка страницы
+                window.location.reload();
+                return;
+            }
+
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+            document.getElementById('seconds').textContent = seconds;
+        }
+
+        // Обновление таймера каждую секунду
+        setInterval(updateTimer, 1000);
+
+        // Анимация загрузки
+        let progress = 0;
+        setInterval(() => {
+            progress = (progress + 1) % 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+        }, 50);
+    </script>
+</body>
+</html>
+  `);
+};
+
+// Применяем pre-launch middleware для всех запросов
+app.use(preLaunchMiddleware);
+
+// 🔐 ЗАЩИЩЕННЫЕ МАРШРУТЫ (требуют аутентификации)
+app.use(`/api/${apiVersion}/users`, authenticateToken);
+app.use(`/api/${apiVersion}/orders`, authenticateToken);
+app.use(`/api/${apiVersion}/notifications`, authenticateToken);
+
+// Removed conflicting demo categories endpoint - using proper routes instead
+
+// 🛍️ FEATURED ТОВАРЫ (отключено - используем MongoDB)
+// app.get(`/api/${apiVersion}/products/featured`, ...);
+
+// 🔐 ДЕМО АВТОРИЗАЦИЯ (отключено - используем MongoDB)
+// app.post(`/api/${apiVersion}/auth/register`, ...);
+
+// 🔐 ДЕМО ЛОГИН (отключено - используем MongoDB)
+// app.post(`/api/${apiVersion}/auth/login`, ...);
+
+// 🚀 ENDPOINTS ДЛЯ УПРАВЛЕНИЯ ЗАПУСКОМ ПРОЕКТА
+
+// Получить статус запуска (публичный)
+app.get(`/api/${apiVersion}/launch/status`, (req, res) => {
+  const now = new Date();
+  const timeLeft = LAUNCH_CONFIG.isLaunched ? 0 : Math.max(0, LAUNCH_CONFIG.launchDate - now);
+
+  res.json({
+    success: true,
+    data: {
+      isLaunched: LAUNCH_CONFIG.isLaunched,
+      launchDate: LAUNCH_CONFIG.launchDate,
+      preLaunchEnabled: LAUNCH_CONFIG.preLaunchEnabled,
+      timeLeft: timeLeft,
+      days: Math.floor(timeLeft / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+      minutes: Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)),
+      seconds: Math.floor((timeLeft % (1000 * 60)) / 1000)
+    }
+  });
+});
+
+// Обновить статус запуска (только админ)
+app.put(`/api/${apiVersion}/launch/status`, authenticateToken, (req, res) => {
+  // Проверяем права админа
+  if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'super_admin')) {
+    return res.status(403).json({
+      success: false,
+      error: 'Недостаточно прав для выполнения действия'
+    });
+  }
+
+  const { isLaunched, launchDate, preLaunchEnabled } = req.body;
+
+  if (typeof isLaunched === 'boolean') {
+    LAUNCH_CONFIG.isLaunched = isLaunched;
+    console.log(`🚀 Статус запуска изменен на: ${isLaunched ? 'ЗАПУЩЕН' : 'PRE-LAUNCH'}`);
+  }
+
+  if (launchDate) {
+    LAUNCH_CONFIG.launchDate = new Date(launchDate);
+    console.log(`📅 Дата запуска установлена: ${LAUNCH_CONFIG.launchDate.toISOString()}`);
+  }
+
+  if (typeof preLaunchEnabled === 'boolean') {
+    LAUNCH_CONFIG.preLaunchEnabled = preLaunchEnabled;
+    console.log(`⚙️ Pre-launch режим: ${preLaunchEnabled ? 'ВКЛЮЧЕН' : 'ОТКЛЮЧЕН'}`);
+  }
+
+  res.json({
+    success: true,
+    message: 'Статус запуска обновлен',
+    data: {
+      isLaunched: LAUNCH_CONFIG.isLaunched,
+      launchDate: LAUNCH_CONFIG.launchDate,
+      preLaunchEnabled: LAUNCH_CONFIG.preLaunchEnabled
+    }
+  });
+});
+
+// 🔍 ПРОВЕРКА ТОКЕНА
+app.get(`/api/${apiVersion}/auth/me`, authenticateToken, (req, res) => {
+  console.log('✅ Токен проверен успешно');
+
+  // Возвращаем информацию о пользователе из токена
+  res.json({
+    success: true,
+    user: req.user
+  });
+});
+
+// 🔐 АДМИНСКАЯ АУТЕНТИФИКАЦИЯ (отключено - используем MongoDB)
+// app.post(`/api/${apiVersion}/auth/admin/login`, ...);
+
+// Проверка админ токена
+app.get(`/api/${apiVersion}/auth/admin/verify`, authenticateToken, (req, res) => {
+  console.log('✅ Админ токен проверен успешно');
+
+  // Проверяем, что пользователь админ
+  if (req.user.role === 'admin') {
+    res.json({
+      success: true,
+      user: req.user
+    });
+  } else {
+    res.status(403).json({
+      success: false,
+      error: 'Недостаточно прав'
+    });
+  }
+});
+
+// 📁 СТАТИЧЕСКИЕ ФАЙЛЫ
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
+// 🏥 HEALTH CHECK
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Chexol.uz API работает нормально',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    version: process.env.npm_package_version || '1.0.0'
+  });
+});
+
+// 🏥 HEALTH CHECK для API
+app.get(`/api/${apiVersion}/health`, (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Chexol.uz API работает нормально',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    version: process.env.npm_package_version || '1.0.0'
+  });
+});
+
+app.use(`/api/${apiVersion}/auth`, authRoutes);
+app.use(`/api/${apiVersion}/products`, productRoutes);
+app.use(`/api/${apiVersion}/categories`, categoryRoutes);
+app.use(`/api/${apiVersion}/orders`, orderRoutes);
+app.use(`/api/${apiVersion}/users`, userRoutes);
+app.use(`/api/${apiVersion}/customers`, require('./routes/customers'));
+app.use(`/api/${apiVersion}/promotions`, require('./routes/promotions'));
+app.use(`/api/${apiVersion}/payouts`, require('./routes/payouts'));
+app.use(`/api/${apiVersion}/inventory`, require('./routes/inventory'));
+app.use(`/api/${apiVersion}/support`, require('./routes/support'));
+app.use(`/api/${apiVersion}/payments`, require('./routes/payments'));
+app.use(`/api/${apiVersion}/admin`, require('./routes/admin'));
+app.use(`/api/${apiVersion}/upload`, uploadRoutes);
+app.use(`/api/${apiVersion}/cities`, cityRoutes);
+app.use(`/api/${apiVersion}/seller-applications`, sellerApplicationRoutes);
+app.use(`/api/${apiVersion}/sellers`, sellerRoutes);
+app.use(`/api/${apiVersion}/chats`, chatRoutes);
+app.use(`/api/${apiVersion}/favorites`, favoritesRoutes);
+app.use(`/api/${apiVersion}/reviews`, reviewsRoutes);
+app.use(`/api/${apiVersion}/contacts`, require('./routes/contacts'));
+app.use(`/api/${apiVersion}/notifications`, require('./routes/notifications'));
+app.use(`/api/${apiVersion}/webhooks`, require('./routes/webhooks'));
+
+// 📋 ГЛАВНАЯ СТРАНИЦА API
+app.get('/', (req, res) => {
+  res.json({
+    message: '🛍️ Добро пожаловать в Chexol.uz API',
+    version: apiVersion,
+    documentation: `/api/${apiVersion}/docs`,
+    health: '/health',
+    endpoints: {
+      auth: `/api/${apiVersion}/auth`,
+      products: `/api/${apiVersion}/products`,
+      categories: `/api/${apiVersion}/categories`,
+      orders: `/api/${apiVersion}/orders`,
+      users: `/api/${apiVersion}/users`,
+      upload: `/api/${apiVersion}/upload`,
+      cities: `/api/${apiVersion}/cities`,
+      'seller-applications': `/api/${apiVersion}/seller-applications`,
+      sellers: `/api/${apiVersion}/sellers`,
+      chats: `/api/${apiVersion}/chats`
+    }
+  });
+});
+
+// 🔍 ДОКУМЕНТАЦИЯ API (заглушка)
+app.get(`/api/${apiVersion}/docs`, (req, res) => {
+  res.json({
+    message: 'API Documentation будет добавлена позже',
+    contact: 'support@chexol.uz'
+  });
+});
+
+// ❌ ОБРАБОТКА ОШИБОК
+app.use(notFound);
+app.use(errorHandler);
+
+// 🚀 ЗАПУСК СЕРВЕРА
+const PORT = process.env.PORT || 5000;
+
+const startServer = async () => {
+  try {
+    // Подключение к базе данных
+    console.log('🗄️  Подключение к MongoDB...');
+    await connectDB();
+    
+    // Запуск сервера
+    const server = app.listen(PORT, () => {
+      console.log('');
+      console.log('🟢 ==========================================');
+      console.log('🚀    CHEXOL.UZ BACKEND API ЗАПУЩЕН');
+      console.log('🟢 ==========================================');
+      console.log(`📍 Сервер:        http://localhost:${PORT}`);
+      console.log(`🌐 API:           http://localhost:${PORT}/api/${apiVersion}`);
+      console.log(`🏥 Health:        http://localhost:${PORT}/health`);
+      console.log(`📋 Документация:  http://localhost:${PORT}/api/${apiVersion}/docs`);
+      console.log(`🌍 Среда:         ${process.env.NODE_ENV || 'development'}`);
+      console.log('🟢 ==========================================');
+      console.log('');
+    });
+
+    // Корректное закрытие сервера
+    process.on('SIGTERM', () => {
+      console.log('🔄 Получен сигнал SIGTERM, закрытие сервера...');
+      server.close((err) => {
+        if (err) {
+          console.error('❌ Ошибка при закрытии сервера:', err);
+          process.exit(1);
+        }
+        console.log('✅ Сервер корректно закрыт');
+        process.exit(0);
+      });
+    });
+
+    process.on('SIGINT', () => {
+      console.log('🔄 Получен сигнал SIGINT, закрытие сервера...');
+      server.close((err) => {
+        if (err) {
+          console.error('❌ Ошибка при закрытии сервера:', err);
+          process.exit(1);
+        }
+        console.log('✅ Сервер корректно закрыт');
+        process.exit(0);
+      });
+    });
+
+  } catch (error) {
+    console.error('❌ Ошибка запуска сервера:', error.message);
+    process.exit(1);
+  }
+};
+
+// Запуск сервера
+startServer();
+
+module.exports = app;

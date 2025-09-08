@@ -1,0 +1,42 @@
+# Frontend Dockerfile для Chexol.uz
+FROM node:18-alpine AS builder
+
+# Установка зависимостей для сборки
+RUN apk add --no-cache git
+
+WORKDIR /app
+
+# Копирование package.json и установка зависимостей
+COPY package*.json ./
+RUN npm ci --only=production=false
+
+# Копирование исходного кода
+COPY . .
+
+# Сборка приложения
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
+
+# Копирование собранного приложения
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Копирование nginx конфигурации
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Создание директорий для логов
+RUN mkdir -p /var/log/nginx
+
+# Экспорт порта
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1
+
+# Запуск nginx
+CMD ["nginx", "-g", "daemon off;"]
+
+
+

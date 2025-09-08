@@ -1,0 +1,224 @@
+:root {
+  /* Brand Colors */
+  --tendo-blue: #2563EB;
+  --tendo-blue-dark: #1D4ED8;
+  --tendo-blue-light: #3B82F6;
+  
+  /* Neutral Colors */
+  --tendo-gray-50: #F8FAFC;
+  --tendo-gray-100: #F1F5F9;
+  --tendo-gray-200: #E2E8F0;
+  --tendo-gray-300: #CBD5E1;
+  --tendo-gray-400: #94A3B8;
+  --tendo-gray-500: #64748B;
+  --tendo-gray-600: #475569;
+  --tendo-gray-700: #334155;
+  --tendo-gray-800: #1E293B;
+  --tendo-gray-900: #0F172A;
+  
+  /* Accent Colors */
+  --tendo-accent: #3B82F6;
+  --tendo-accent-500: #3B82F6;
+  --tendo-accent-600: #2563EB;
+  --tendo-success: #10B981;
+  --tendo-warning: #F59E0B;
+  --tendo-error: #EF4444;
+  
+  /* Primary Colors */
+  --tendo-primary: #1B4DB3;
+  --tendo-primary-500: #1B4DB3;
+  --tendo-primary-600: #123478;
+  --tendo-primary-100: #DBEAFE;
+  
+  /* Shadows */
+  --tendo-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --tendo-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --tendo-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --tendo-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --tendo-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* Brand-specific utility classes */
+.bg-tendo-blue { background-color: var(--tendo-blue); }
+.bg-tendo-blue-dark { background-color: var(--tendo-blue-dark); }
+.text-tendo-blue { color: var(--tendo-blue); }
+.border-tendo-blue { border-color: var(--tendo-blue); }
+
+.hover\:bg-tendo-blue-dark:hover { background-color: var(--tendo-blue-dark); }
+.hover\:text-tendo-blue:hover { color: var(--tendo-blue); }
+.hover\:border-tendo-blue:hover { border-color: var(--tendo-blue); }
+
+/* Accent Colors */
+.bg-accent-500 { background-color: var(--tendo-accent-500); }
+.bg-accent-600 { background-color: var(--tendo-accent-600); }
+.text-accent-500 { color: var(--tendo-accent-500); }
+.border-accent-500 { border-color: var(--tendo-accent-500); }
+
+.hover\:bg-accent-600:hover { background-color: var(--tendo-accent-600); }
+.hover\:text-accent-500:hover { color: var(--tendo-accent-500); }
+
+/* Primary Colors */
+.bg-primary-500 { background-color: var(--tendo-primary-500); }
+.bg-primary-600 { background-color: var(--tendo-primary-600); }
+.bg-primary-100 { background-color: var(--tendo-primary-100); }
+.text-primary-500 { color: var(--tendo-primary-500); }
+.text-primary-600 { color: var(--tendo-primary-600); }
+.border-primary-500 { border-color: var(--tendo-primary-500); }
+
+.hover\:bg-primary-600:hover { background-color: var(--tendo-primary-600); }
+.hover\:text-primary-500:hover { color: var(--tendo-primary-500); }
+.hover\:bg-primary-100:hover { background-color: var(--tendo-primary-100); }
+
+/* Focus Ring */
+.focus\:ring-primary-500:focus { --tw-ring-color: var(--tendo-primary-500); }
+
+/* Gradient */
+.from-accent-500 { --tw-gradient-from: var(--tendo-accent-500); }
+.from-primary-500 { --tw-gradient-from: var(--tendo-primary-500); }
+.via-primary-600 { --tw-gradient-stops: var(--tw-gradient-from), var(--tendo-primary-600), var(--tw-gradient-to); }
+.to-accent-500 { --tw-gradient-to: var(--tendo-accent-500); }
+
+/* Button Styles */
+.btn-primary {
+  @apply bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl;
+}
+
+.btn-accent {
+  @apply bg-accent-500 hover:bg-accent-600 text-gray-900 font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl;
+}
+
+.btn-secondary {
+  @apply bg-white hover:bg-gray-50 text-primary-600 font-semibold py-3 px-6 rounded-lg border-2 border-primary-500 transition-all duration-200;
+}
+
+/* Form Styles */
+.input-field {
+  @apply w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+}
+
+/* Hero Banner */
+.hero-banner {
+  @apply relative bg-gradient-to-r from-primary-500 via-primary-600 to-accent-500 text-white rounded-2xl overflow-hidden;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  @apply animate-spin rounded-full border-4 border-gray-200 border-t-primary-500;
+}
+
+/* Badge Styles */
+.badge-bestseller {
+  @apply bg-accent-500 text-gray-900 text-xs font-semibold px-2 py-1 rounded-full uppercase;
+}
+
+.badge-new {
+  @apply bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full uppercase;
+}
+
+.badge-sale {
+  @apply bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full uppercase;
+}
+
+/* Section Padding */
+.section-padding {
+  @apply py-12;
+}
+
+@media (min-width: 640px) {
+  .section-padding {
+    @apply py-16;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-padding {
+    @apply py-20;
+  }
+}
+
+/* Star Rating */
+.star-filled {
+  @apply text-yellow-400;
+}
+
+.star-empty {
+  @apply text-gray-300;
+}
+
+/* Line Clamp */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Category Grid Styles */
+.categories-showcase {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 640px) {
+  .categories-showcase {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .categories-showcase {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* Product Grid Styles */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 640px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* Container and Section Styles */
+.container-custom {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-custom {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-custom {
+    padding: 0 2rem;
+  }
+}

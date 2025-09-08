@@ -1,0 +1,4 @@
+# ЗАПУСК ПРОЕКТА - ОТКЛЮЧЕН PRE-LAUNCH
+LAUNCH_DATE=2025-09-15T00:00:00Z
+PRE_LAUNCH_ENABLED=false
+IS_LAUNCHED=true

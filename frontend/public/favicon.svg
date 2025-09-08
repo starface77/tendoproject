@@ -1,0 +1,28 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f8fafc;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main background with rounded corners -->
+  <rect width="32" height="32" rx="6" fill="#2563EB"/>
+  
+  <!-- Letter T in white -->
+  <path d="M8 8h16v3H18v13h-4V11H8V8z" fill="white"/>
+  
+  <!-- Decorative accent -->
+  <circle cx="24" cy="24" r="2.5" fill="white" opacity="0.9"/>
+  
+  <!-- Subtle shine effect -->
+  <circle cx="8" cy="8" r="2" fill="white" opacity="0.4"/>
+  
+  <!-- Inner highlight -->
+  <rect x="8" y="8" width="16" height="3" rx="1.5" fill="white" opacity="0.2"/>
+</svg>

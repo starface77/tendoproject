@@ -1,0 +1,11 @@
+{
+  "name": "iPhone 15 Pro",
+  "price": 1500000,
+  "description": "Новый iPhone 15 Pro с чипом A17 Pro",
+  "brand": "Apple",
+  "model": "iPhone 15 Pro",
+  "images": ["https://example.com/iphone15.jpg"],
+  "isActive": true,
+  "inStock": true,
+  "stock": 10
+}

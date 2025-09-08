@@ -1,0 +1,32 @@
+# 🌍 ДЕМО РЕЖИМ - РАЗРАБОТКА БЕЗ БАЗЫ ДАННЫХ
+NODE_ENV=development
+USE_DEMO_MODE=true
+
+# 🔐 JWT СЕКРЕТЫ
+JWT_SECRET=super_secret_jwt_key_for_demo_development_only_change_in_production_2025
+JWT_EXPIRE=7d
+
+# 🌐 СЕРВЕРЫ
+PORT=5000
+ADMIN_PORT=5001
+
+# 📧 EMAIL НАСТРОЙКИ (демо)
+EMAIL_FROM=noreply@tendo-marketplace.com
+
+# 🏪 НАСТРОЙКИ МАГАЗИНА
+STORE_NAME=Ten Do Marketplace
+STORE_URL=http://localhost:3000
+ADMIN_FRONTEND_URL=http://localhost:3002
+
+# 🔧 БЕЗОПАСНОСТЬ (демо режим)
+RATE_LIMIT_WINDOW=60
+RATE_LIMIT_MAX=1000
+MAX_FILE_SIZE=10mb
+
+# 📝 ЛОГИРОВАНИЕ
+LOG_LEVEL=debug
+
+# 🎭 ДЕМО ДАННЫЕ
+# Пользователи:
+# Admin: admin@tendo.uz / admin123
+# User: user@tendo.uz / user123
