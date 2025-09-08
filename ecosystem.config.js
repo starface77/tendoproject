@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'tendo-backend',
-      script: './backend/app.js',
-      cwd: '/var/www/tendo',
+      script: 'app.js',
+      cwd: '/var/www/tendo/backend',
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,
@@ -13,7 +13,7 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 5000,
         MONGO_URI: 'mongodb://localhost:27017/tendomarketuz',
-        JWT_SECRET: 'tendo_market_production_jwt_secret_key_2024_super_secure_change_this',
+        JWT_SECRET: 'tendo_market_jwt_secret_2024',
         CLIENT_URL: 'https://tendo.uz',
         ADMIN_FRONTEND_URL: 'https://admin.tendo.uz',
         HTTPS_ENABLED: 'true',
