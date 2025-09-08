@@ -31,17 +31,8 @@ const protect = async (req, res, next) => {
     }
 
     try {
-      // Верификация токена
+      // Верификация токена (jwt.verify автоматически проверяет срок действия)
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_jwt_key_for_demo_development_only_change_in_production_2025');
-
-      // Проверка срока действия
-      if (decoded.exp && Date.now() >= decoded.exp * 1000) {
-        return res.status(401).json({
-          success: false,
-          error: 'Срок действия токена истек',
-          code: 'TOKEN_EXPIRED'
-        });
-      }
 
       let user;
 

@@ -12,15 +12,15 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('admin_token'));
+  const [token, setToken] = useState(localStorage.getItem('admin_token') || localStorage.getItem('adminToken'));
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // Инициализация токена и загрузка пользователя при загрузке страницы
   useEffect(() => {
-    const storedToken = localStorage.getItem('admin_token');
+    const storedToken = localStorage.getItem('admin_token') || localStorage.getItem('adminToken');
     console.log('🔑 Инициализация токена из localStorage:', storedToken ? 'ЕСТЬ' : 'НЕТ');
-    
+
     if (storedToken && !token) {
       setToken(storedToken);
       console.log('✅ Токен восстановлен из localStorage');
@@ -40,11 +40,19 @@ export const AuthProvider = ({ children }) => {
             console.log('👤 Роль пользователя:', (userData.data || userData.user).role);
           } else {
             console.log('⚠️ Ошибка загрузки пользователя:', userData);
-            // НЕ выходим автоматически
+            // Очищаем токен только если это ошибка авторизации
+            if (userData.code === 'USER_NOT_FOUND' || userData.code === 'ACCOUNT_INACTIVE') {
+              logout();
+            }
           }
         } catch (error) {
           console.error('❌ Ошибка проверки токена:', error);
-          // НЕ выходим автоматически при сетевых ошибках
+          // Очищаем токен только при истечении срока действия или недействительном токене
+          if (error.expired || error.code === 'TOKEN_EXPIRED' || error.code === 'INVALID_TOKEN') {
+            console.log('🕒 Токен истек, очищаем сессию');
+            logout();
+          }
+          // При сетевых ошибках НЕ выходим автоматически
         }
       }
     };
@@ -83,6 +91,7 @@ export const AuthProvider = ({ children }) => {
         setToken(newToken);
         setUser(userData);
         localStorage.setItem('admin_token', newToken);
+        localStorage.setItem('adminToken', newToken); // Для совместимости
         
         return { success: true };
       } else {
@@ -106,6 +115,7 @@ export const AuthProvider = ({ children }) => {
       setToken(null);
       setUser(null);
       localStorage.removeItem('admin_token');
+      localStorage.removeItem('adminToken');
     }
   };
 
@@ -113,6 +123,7 @@ export const AuthProvider = ({ children }) => {
     console.log('🔄 Обновление токена');
     setToken(newToken);
     localStorage.setItem('admin_token', newToken);
+    localStorage.setItem('adminToken', newToken); // Для совместимости
 
     // Перезагружаем информацию о пользователе
     if (newToken) {

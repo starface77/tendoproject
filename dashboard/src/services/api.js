@@ -6,7 +6,7 @@
 import axios from 'axios';
 
 // Базовая конфигурация API (env-driven)
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || (process.env.NODE_ENV === 'production' ? 'https://api.tendo.uz/api/v1' : 'http://localhost:5000/api/v1');
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || (process.env.NODE_ENV === 'production' ? '/api/v1' : 'http://localhost:5000/api/v1');
 
 // Создаем экземпляр axios для админки
 const adminApi = axios.create({
@@ -40,14 +40,17 @@ adminApi.interceptors.response.use(
   (error) => {
     // Обработка различных типов ошибок
     if (error.response?.status === 401) {
-      // Токен недействителен, выходим из системы
+      // Токен недействителен - очищаем токен и показываем сообщение
+      console.log('⚠️ Токен истек или недействителен');
       localStorage.removeItem('admin_token');
       localStorage.removeItem('adminToken');
-      window.location.href = '/login';
+
+      // Не перенаправляем автоматически, даем возможность повторного входа
       return Promise.reject({
         message: 'Сессия истекла. Пожалуйста, войдите снова.',
         status: 401,
-        type: 'auth'
+        type: 'auth',
+        expired: true
       });
     }
 
