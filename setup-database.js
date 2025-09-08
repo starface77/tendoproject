@@ -4,8 +4,13 @@
  */
 
 const mongoose = require('mongoose');
-const City = require('./backend/models/City');
-const User = require('./backend/models/User');
+const path = require('path');
+
+// Определяем путь к моделям в зависимости от того, где запущен скрипт
+const modelsPath = path.join(__dirname, 'backend', 'models');
+
+const City = require(path.join(modelsPath, 'City'));
+const User = require(path.join(modelsPath, 'User'));
 
 // Данные городов Узбекистана
 const uzbekistanCities = [
