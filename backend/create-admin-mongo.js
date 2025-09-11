@@ -8,7 +8,7 @@ async function createAdminMongo() {
     await client.connect();
     console.log('✅ Подключено к MongoDB');
 
-    const db = client.db('chexoluz');
+    const db = client.db('tendomarketuz');
 
     // Создаем админа
     const users = db.collection('users');

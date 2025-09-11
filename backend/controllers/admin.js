@@ -547,11 +547,97 @@ const getAdminProducts = async (req, res) => {
 // @access  Private (Admin)
 const createAdminProduct = async (req, res) => {
   try {
-    req.body.createdBy = req.user._id;
-    const product = new Product(req.body);
+    console.log('📦 Creating product with data:', req.body);
+    
+    // Валидация обязательных полей
+    const { name, price } = req.body;
+    if (!name || (!name.ru && typeof name !== 'string')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Название товара обязательно'
+      });
+    }
+
+    if (!price || isNaN(Number(price))) {
+      return res.status(400).json({
+        success: false,
+        error: 'Цена должна быть числом'
+      });
+    }
+
+    // Проверяем существование категории
+    if (req.body.category) {
+      const Category = require('../models/Category');
+      const category = await Category.findById(req.body.category);
+      if (!category) {
+        return res.status(400).json({
+          success: false,
+          error: 'Категория не найдена'
+        });
+      }
+    }
+
+    // Адаптируем данные для правильной структуры
+    const productData = {
+      name: typeof name === 'string' ? {
+        ru: name,
+        uz: name,
+        en: name
+      } : name,
+      description: typeof req.body.description === 'string' ? {
+        ru: req.body.description || 'Описание товара',
+        uz: req.body.description || 'Mahsulot tavsifi',
+        en: req.body.description || 'Product description'
+      } : req.body.description || {
+        ru: 'Описание товара',
+        uz: 'Mahsulot tavsifi',
+        en: 'Product description'
+      },
+      price: Number(price),
+      originalPrice: req.body.originalPrice ? Number(req.body.originalPrice) : undefined,
+      category: req.body.category,
+      brand: req.body.brand || 'Other',
+      model: req.body.model || 'Generic',
+      material: req.body.material || 'fabric',
+      images: Array.isArray(req.body.images) ? req.body.images : [],
+      image: req.body.image || (req.body.images && req.body.images[0]) || null,
+      isActive: req.body.isActive !== false,
+      inStock: req.body.inStock !== false,
+      isNew: req.body.isNew || false,
+      featured: req.body.featured || false,
+      status: 'active',
+      stock: req.body.stock || 1,
+      createdBy: req.user._id,
+      // SEO данные
+      slug: req.body.slug,
+      metaTitle: req.body.metaTitle ? {
+        ru: req.body.metaTitle,
+        uz: req.body.metaTitle,
+        en: req.body.metaTitle
+      } : undefined,
+      metaDescription: req.body.metaDescription ? {
+        ru: req.body.metaDescription,
+        uz: req.body.metaDescription,
+        en: req.body.metaDescription
+      } : undefined,
+      // Дополнительные поля
+      shortDescription: req.body.shortDescription ? {
+        ru: req.body.shortDescription,
+        uz: req.body.shortDescription,
+        en: req.body.shortDescription
+      } : undefined,
+      tags: Array.isArray(req.body.tags) ? req.body.tags : [],
+      features: Array.isArray(req.body.features) ? req.body.features : [],
+      specifications: Array.isArray(req.body.specifications) ? req.body.specifications : [],
+      variants: Array.isArray(req.body.variants) ? req.body.variants : []
+    };
+
+    const product = new Product(productData);
     await product.save();
 
     await product.populate('category', 'name');
+
+    console.log('✅ Product created:', product._id);
 
     res.status(201).json({
       success: true,
@@ -560,7 +646,18 @@ const createAdminProduct = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Create Admin Product Error:', error);
+    console.error('❌ Create Admin Product Error:', error);
+    
+    // Обработка ошибок валидации Mongoose
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        error: 'Ошибки валидации',
+        details: errors
+      });
+    }
+
     res.status(500).json({
       success: false,
       error: 'Ошибка создания товара'
@@ -778,97 +875,41 @@ const getAdminCategories = async (req, res) => {
 // @access  Private (Admin)
 const createAdminCategory = async (req, res) => {
   try {
-    console.log('📝 Создание категории, данные:', req.body);
+    console.log('🗂️ Creating category with data:', req.body);
     
-    const { name, description, icon, color, isActive = true, isFeatured = false } = req.body;
-    
-    // Определяем название - может быть строкой или объектом
-    let categoryName;
-    if (typeof name === 'string') {
-      // Если пришла простая строка
-      categoryName = {
-        ru: name,
-        uz: name,
-        en: name
-      };
-    } else if (typeof name === 'object' && name !== null) {
-      // Если пришел объект
-      categoryName = {
-        ru: name.ru || name.name || 'Категория',
-        uz: name.uz || name.name || 'Kategoriya',
-        en: name.en || name.name || 'Category'
-      };
-    } else {
-      // Дефолтные значения
-      categoryName = {
-        ru: 'Категория',
-        uz: 'Kategoriya',
-        en: 'Category'
-      };
+    // Валидация обязательных полей
+    const { name } = req.body;
+    if (!name || !name.ru || !name.uz || !name.en) {
+      return res.status(400).json({
+        success: false,
+        error: 'Название на всех языках обязательно',
+        details: 'Требуются поля name.ru, name.uz, name.en'
+      });
     }
-    
-    // Генерируем slug из русского названия (транслитерация)
-    const transliterate = (text) => {
-      const cyrillicToLatin = {
-        'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
-        'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
-        'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
-        'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
-        'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
-        'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo',
-        'Ж': 'Zh', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M',
-        'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
-        'Ф': 'F', 'Х': 'H', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Sch',
-        'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
-      };
-      
-      return text.split('').map(char => cyrillicToLatin[char] || char).join('');
-    };
-    
-    const slug = categoryName.ru ? transliterate(categoryName.ru)
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '') // убираем спец символы
-      .replace(/\s+/g, '-') // пробелы в дефисы
-      .replace(/-+/g, '-') // множественные дефисы в один
-      .trim() : 'category-' + Date.now();
-    
-    // Аналогично для описания
-    let categoryDescription;
-    if (typeof description === 'string') {
-      categoryDescription = {
-        ru: description,
-        uz: description,
-        en: description
-      };
-    } else if (typeof description === 'object' && description !== null) {
-      categoryDescription = {
-        ru: description.ru || description.description || '',
-        uz: description.uz || description.description || '',
-        en: description.en || description.description || ''
-      };
-    } else {
-      categoryDescription = {
-        ru: '',
-        uz: '',
-        en: ''
-      };
+
+    // Проверяем родительскую категорию если указана
+    if (req.body.parent) {
+      const parentCategory = await Category.findById(req.body.parent);
+      if (!parentCategory) {
+        return res.status(400).json({
+          success: false,
+          error: 'Родительская категория не найдена'
+        });
+      }
     }
-    
+
+    // Добавляем создателя
     const categoryData = {
-      name: categoryName,
-      description: categoryDescription,
-      slug,
-      createdBy: req.user._id,
-      isActive,
-      isFeatured,
-      icon: icon || '📦',
-      color: color || '#3B82F6'
+      ...req.body,
+      createdBy: req.user?._id
     };
-    
-    console.log('✅ Подготовленные данные категории:', categoryData);
-    
+
     const category = new Category(categoryData);
     await category.save();
+
+    await category.populate('parent', 'name slug');
+
+    console.log('✅ Category created:', category._id);
 
     res.status(201).json({
       success: true,
@@ -877,7 +918,18 @@ const createAdminCategory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Create Admin Category Error:', error);
+    console.error('❌ Create Admin Category Error:', error);
+    
+    // Обработка ошибок валидации Mongoose
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        error: 'Ошибки валидации',
+        details: errors
+      });
+    }
+
     res.status(500).json({
       success: false,
       error: 'Ошибка создания категории'
@@ -987,7 +1039,7 @@ const getSystemSettings = async (req, res) => {
       general: {
         siteName: 'Chexol.UZ',
         siteDescription: 'Магазин чехлов для телефонов',
-        contactEmail: 'support@chexol.uz',
+        contactEmail: 'support@tendo.uz',
         contactPhone: '+998901234567',
         currency: 'UZS',
         language: 'ru'
@@ -1050,339 +1102,6 @@ const updateSystemSettings = async (req, res) => {
   }
 };
 
-// ==================== SELLER MANAGEMENT ====================
-
-// @desc    Get all sellers
-// @route   GET /api/v1/admin/sellers
-// @access  Private (Admin)
-const getSellers = async (req, res) => {
-  try {
-    const {
-      page = 1,
-      limit = 20,
-      status,
-      search,
-      sort = '-createdAt'
-    } = req.query;
-
-    const query = { role: 'seller' };
-
-    if (status) query.isActive = status === 'active';
-    if (search) {
-      query.$or = [
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { 'sellerProfile.businessName': { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    const sellers = await User.find(query)
-      .select('-password')
-      .populate('sellerProfile')
-      .sort(sort)
-      .limit(parseInt(limit))
-      .skip((parseInt(page) - 1) * parseInt(limit));
-
-    const total = await User.countDocuments(query);
-
-    res.status(200).json({
-      success: true,
-      count: sellers.length,
-      total,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(total / parseInt(limit))
-      },
-      data: sellers
-    });
-
-  } catch (error) {
-    console.error('Get Sellers Error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ошибка получения продавцов'
-    });
-  }
-};
-
-// @desc    Get single seller
-// @route   GET /api/v1/admin/sellers/:id
-// @access  Private (Admin)
-const getSeller = async (req, res) => {
-  try {
-    const seller = await User.findOne({ 
-      _id: req.params.id, 
-      role: 'seller' 
-    })
-      .select('-password')
-      .populate('sellerProfile');
-
-    if (!seller) {
-      return res.status(404).json({
-        success: false,
-        error: 'Продавец не найден'
-      });
-    }
-
-    // Get seller stats
-    const [productCount, orderCount, totalRevenue] = await Promise.all([
-      Product.countDocuments({ seller: seller._id }),
-      Order.countDocuments({ seller: seller._id }),
-      Order.aggregate([
-        { $match: { seller: seller._id, 'payment.status': 'paid' } },
-        { $group: { _id: null, total: { $sum: '$pricing.total' } } }
-      ])
-    ]);
-
-    const revenue = totalRevenue.length > 0 ? totalRevenue[0].total : 0;
-
-    res.status(200).json({
-      success: true,
-      data: {
-        ...seller.toObject(),
-        stats: {
-          productCount,
-          orderCount,
-          totalRevenue: revenue
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error('Get Seller Error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ошибка получения продавца'
-    });
-  }
-};
-
-// @desc    Suspend seller
-// @route   PATCH /api/v1/admin/sellers/:id/suspend
-// @access  Private (Admin)
-const suspendSeller = async (req, res) => {
-  try {
-    const seller = await User.findOneAndUpdate(
-      { _id: req.params.id, role: 'seller' },
-      { isActive: false, suspendedAt: new Date(), suspendedBy: req.user._id },
-      { new: true }
-    ).select('-password');
-
-    if (!seller) {
-      return res.status(404).json({
-        success: false,
-        error: 'Продавец не найден'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Продавец заблокирован',
-      data: seller
-    });
-
-  } catch (error) {
-    console.error('Suspend Seller Error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ошибка блокировки продавца'
-    });
-  }
-};
-
-// @desc    Unsuspend seller
-// @route   PATCH /api/v1/admin/sellers/:id/unsuspend
-// @access  Private (Admin)
-const unsuspendSeller = async (req, res) => {
-  try {
-    const seller = await User.findOneAndUpdate(
-      { _id: req.params.id, role: 'seller' },
-      { 
-        isActive: true, 
-        $unset: { suspendedAt: 1, suspendedBy: 1 }
-      },
-      { new: true }
-    ).select('-password');
-
-    if (!seller) {
-      return res.status(404).json({
-        success: false,
-        error: 'Продавец не найден'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Продавец разблокирован',
-      data: seller
-    });
-
-  } catch (error) {
-    console.error('Unsuspend Seller Error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ошибка разблокировки продавца'
-    });
-  }
-};
-
-// @desc    Update seller commission
-// @route   PATCH /api/v1/admin/sellers/:id/commission
-// @access  Private (Admin)
-const updateCommission = async (req, res) => {
-  try {
-    const { commission } = req.body;
-
-    if (!commission || commission < 0 || commission > 100) {
-      return res.status(400).json({
-        success: false,
-        error: 'Комиссия должна быть от 0 до 100%'
-      });
-    }
-
-    const seller = await User.findOneAndUpdate(
-      { _id: req.params.id, role: 'seller' },
-      { 'sellerProfile.commission': commission },
-      { new: true }
-    ).select('-password').populate('sellerProfile');
-
-    if (!seller) {
-      return res.status(404).json({
-        success: false,
-        error: 'Продавец не найден'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Комиссия обновлена',
-      data: seller
-    });
-
-  } catch (error) {
-    console.error('Update Commission Error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ошибка обновления комиссии'
-    });
-  }
-};
-
-// @desc    Get seller analytics
-// @route   GET /api/v1/admin/sellers/:id/analytics
-// @access  Private (Admin)
-const getSellerAnalytics = async (req, res) => {
-  try {
-    const { period = '30d' } = req.query;
-    const sellerId = req.params.id;
-
-    // Calculate date range
-    let dateRange;
-    const now = new Date();
-    
-    switch (period) {
-      case '7d':
-        dateRange = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        dateRange = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case '90d':
-        dateRange = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        dateRange = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    }
-
-    // Get analytics data
-    const [
-      ordersByDay,
-      revenueByDay,
-      topProducts,
-      orderStatusStats
-    ] = await Promise.all([
-      // Orders by day
-      Order.aggregate([
-        { $match: { seller: sellerId, createdAt: { $gte: dateRange } } },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-            count: { $sum: 1 },
-            revenue: { $sum: '$pricing.total' }
-          }
-        },
-        { $sort: { _id: 1 } }
-      ]),
-      
-      // Revenue by day
-      Order.aggregate([
-        { 
-          $match: { 
-            seller: sellerId,
-            createdAt: { $gte: dateRange },
-            'payment.status': 'paid'
-          } 
-        },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-            revenue: { $sum: '$pricing.total' }
-          }
-        },
-        { $sort: { _id: 1 } }
-      ]),
-      
-      // Top products
-      Product.aggregate([
-        { $match: { seller: sellerId, purchases: { $gt: 0 } } },
-        {
-          $project: {
-            name: '$name.ru',
-            purchases: 1,
-            revenue: { $multiply: ['$price', '$purchases'] },
-            views: 1
-          }
-        },
-        { $sort: { purchases: -1 } },
-        { $limit: 10 }
-      ]),
-      
-      // Order status statistics
-      Order.aggregate([
-        { $match: { seller: sellerId, createdAt: { $gte: dateRange } } },
-        {
-          $group: {
-            _id: '$status',
-            count: { $sum: 1 },
-            revenue: { $sum: '$pricing.total' }
-          }
-        }
-      ])
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: {
-        period,
-        dateRange,
-        ordersByDay,
-        revenueByDay,
-        topProducts,
-        orderStatusStats
-      }
-    });
-
-  } catch (error) {
-    console.error('Get Seller Analytics Error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ошибка получения аналитики продавца'
-    });
-  }
-};
-
 module.exports = {
   // Dashboard
   getDashboardStats,
@@ -1416,13 +1135,5 @@ module.exports = {
 
   // Settings
   getSystemSettings,
-  updateSystemSettings,
-
-  // Seller management
-  getSellers,
-  getSeller,
-  suspendSeller,
-  unsuspendSeller,
-  updateCommission,
-  getSellerAnalytics
+  updateSystemSettings
 };

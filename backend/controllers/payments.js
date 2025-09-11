@@ -58,11 +58,83 @@ const getPaymentMethods = async (req, res) => {
 // Create payment
 const createPayment = async (req, res) => {
   try {
-    // TODO: Implement payment creation
+    const { orderId, paymentMethod, returnUrl } = req.body;
+    
+    console.log('💳 Creating payment:', { orderId, paymentMethod });
+    
+    // Валидация входных данных
+    if (!orderId || !paymentMethod) {
+      return res.status(400).json({
+        success: false,
+        error: 'Не указаны обязательные параметры'
+      });
+    }
+
+    // Найти заказ
+    const Order = require('../models/Order');
+    const order = await Order.findById(orderId).populate('items.product');
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        error: 'Заказ не найден'
+      });
+    }
+
+    // Проверить статус заказа
+    if (order.status === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        error: 'Заказ отменен'
+      });
+    }
+
+    // Создать платеж через PaymentService
+    const PaymentService = require('../services/paymentService');
+    const paymentService = new PaymentService();
+    
+    const paymentResult = await paymentService.createPaymentSession(order, paymentMethod);
+    
+    if (!paymentResult.success) {
+      return res.status(400).json({
+        success: false,
+        error: paymentResult.error || 'Ошибка создания платежа'
+      });
+    }
+
+    // Сохранить платеж в базе данных
+    const Payment = require('../models/Payment');
+    const payment = new Payment({
+      orderId: order._id,
+      amount: order.pricing?.total || order.totalAmount,
+      currency: 'UZS',
+      paymentMethod,
+      status: 'pending',
+      sessionData: paymentResult.session,
+      returnUrl: returnUrl || `${process.env.FRONTEND_URL}/payment/success`
+    });
+
+    await payment.save();
+    
+    console.log('✅ Payment created:', payment._id);
+
+    // Обновить статус заказа
+    order.paymentStatus = 'pending';
+    order.paymentMethod = paymentMethod;
+    await order.save();
+
     res.json({
       success: true,
-      message: 'Payment creation not implemented yet'
+      data: {
+        paymentId: payment._id,
+        paymentUrl: paymentResult.paymentUrl,
+        paymentMethod: paymentResult.paymentMethod,
+        amount: payment.amount,
+        currency: payment.currency,
+        status: payment.status
+      }
     });
+
   } catch (error) {
     console.error('❌ Create payment error:', error);
     res.status(500).json({

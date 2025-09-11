@@ -11,7 +11,7 @@ async function testAllAPIs() {
     const client = new MongoClient('mongodb://localhost:27017');
 
     await client.connect();
-    const db = client.db('chexoluz');
+    const db = client.db('tendomarketuz');
     const users = db.collection('users');
 
     const hashedPassword = await bcrypt.hash('admin123456', 12);
@@ -134,7 +134,7 @@ async function testAllAPIs() {
     const client = new MongoClient('mongodb://localhost:27017');
 
     await client.connect();
-    const db = client.db('chexoluz');
+    const db = client.db('tendomarketuz');
     const applications = db.collection('sellerapplications');
 
     await applications.updateOne(

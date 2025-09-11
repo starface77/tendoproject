@@ -43,12 +43,66 @@ const getAdminBanners = async (req, res) => {
 // Admin: create banner
 const createBanner = async (req, res) => {
   try {
+    console.log('🎨 Creating banner with data:', req.body);
+    
     const { imageUrl, targetUrl, order, isActive, validFrom, validTo, title, subtitle, badgeText, bgColor, bgGradient } = req.body;
-    if (!imageUrl || typeof imageUrl !== 'string') return res.status(400).json({ success: false, error: 'imageUrl is required' });
-    const banner = await Banner.create({ imageUrl, targetUrl, order, isActive, validFrom, validTo, title, subtitle, badgeText, bgColor, bgGradient, createdBy: req.user?._id });
-    res.status(201).json({ success: true, data: banner });
-  } catch (e) {
-    res.status(500).json({ success: false, error: 'Failed to create banner' });
+    
+    // Валидация обязательных полей
+    if (!title || !title.trim()) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Название баннера обязательно' 
+      });
+    }
+    
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'URL изображения обязателен' 
+      });
+    }
+
+    const bannerData = {
+      imageUrl,
+      targetUrl: targetUrl || '',
+      order: order || 0,
+      isActive: isActive !== undefined ? isActive : true,
+      validFrom: validFrom ? new Date(validFrom) : new Date(),
+      validTo: validTo ? new Date(validTo) : null,
+      title: title.trim(),
+      subtitle: subtitle || '',
+      badgeText: badgeText || '',
+      bgColor: bgColor || '#ffffff',
+      bgGradient: bgGradient || '',
+      createdBy: req.user?._id
+    };
+
+    const banner = await Banner.create(bannerData);
+    
+    console.log('✅ Banner created:', banner._id);
+    
+    res.status(201).json({ 
+      success: true, 
+      message: 'Баннер создан',
+      data: banner 
+    });
+  } catch (error) {
+    console.error('❌ Create Banner Error:', error);
+    
+    // Обработка ошибок валидации Mongoose
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        error: 'Ошибки валидации',
+        details: errors
+      });
+    }
+
+    res.status(500).json({ 
+      success: false, 
+      error: 'Ошибка создания баннера' 
+    });
   }
 };
 

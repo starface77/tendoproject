@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { FiGrid, FiList, FiFilter, FiChevronDown, FiChevronRight, FiRefreshCw, FiTag, FiStar } from 'react-icons/fi'
+import { FiGrid, FiList, FiFilter, FiChevronDown, FiChevronRight, FiRefreshCw, FiTag, FiStar, FiShoppingBag, FiArrowLeft } from 'react-icons/fi'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import ProductCard from '../components/product/ProductCard'
 import { productsApi, categoriesApi, checkApiHealth } from '../services/api'
@@ -180,8 +180,25 @@ const CategoryPage = () => {
     }
   }
 
-  // Демо товары с поддержкой иерархических категорий
+  // Загрузка товаров из API
+  const loadProductsFromAPI = async (categoryId) => {
+    try {
+      // Попытка загрузить товары через API
+      const response = await api.products.getByCategory(categoryId)
+      if (response.success && response.data && response.data.length > 0) {
+        return response.data
+      }
+    } catch (error) {
+      console.log('API недоступен, показываем пустое состояние:', error)
+    }
+    return []
+  }
+
+  // Демо товары с поддержкой иерархических категорий (только для разработки)
   const generateDemoProducts = (categoryId) => {
+    // Возвращаем пустой массив - больше не показываем fake товары
+    return []
+    
     const baseProducts = {
       'electronics': [
         { title: 'iPhone 15 Pro Max 256GB', price: 15990000, oldPrice: 17500000, brand: 'Apple', subcategory: 'electronics-smartphones-phones', rating: 4.8, reviews: 156, isNew: true },
@@ -312,24 +329,17 @@ const CategoryPage = () => {
 
       setBrands(catData.brands || [])
 
-      let demoProducts = generateDemoProducts(categoryId)
+      // Загружаем товары из API
+      const apiProducts = await loadProductsFromAPI(categoryId)
       
-      // Дополняем демо данными
-      for (let i = 0; i < 15; i++) {
-        demoProducts.push({
-          id: `demo_${i}`,
-          title: `${catData.name} товар ${i + 1}`,
-          price: Math.floor(Math.random() * 2000000) + 100000,
-          brand: catData.brands[Math.floor(Math.random() * catData.brands.length)],
-          subcategory: catData.subcategories[Math.floor(Math.random() * catData.subcategories.length)].id,
-          rating: 4 + Math.random(),
-          reviews: Math.floor(Math.random() * 200) + 10,
-          image: '/images/placeholder-product.jpg'
-        })
+      if (apiProducts.length === 0) {
+        // Если нет товаров, показываем пустое состояние
+        setProducts([])
+        return
       }
 
       // Применяем фильтры
-      let filteredProducts = applyFilters(demoProducts)
+      let filteredProducts = applyFilters(apiProducts)
       
       // Сортировка
       filteredProducts = applySorting(filteredProducts)
@@ -743,14 +753,14 @@ const CategoryPage = () => {
                   : 'grid-cols-1'
               }`}>
                 {products.map((product, index) => (
-                  <div key={product.id || index} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                  <div key={product._id || product.id || index} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
                     
                     <div className="relative">
                       <img
-                        src={product.image || '/images/placeholder-product.jpg'}
-                        alt={product.title}
+                        src={product.images?.[0] || product.image || '/images/placeholder-product.jpg'}
+                        alt={product.name?.ru || product.title || 'Товар'}
                         className="w-full h-48 object-cover"
-                          onError={(e) => {
+                        onError={(e) => {
                           e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='
                         }}
                       />
@@ -759,9 +769,9 @@ const CategoryPage = () => {
                           Новинка
                         </div>
                       )}
-                      {product.oldPrice && (
+                      {product.originalPrice && (
                         <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                          -{Math.round((1 - product.price / product.oldPrice) * 100)}%
+                          -{Math.round((1 - product.price / product.originalPrice) * 100)}%
                         </div>
                       )}
                       </div>
@@ -815,20 +825,19 @@ const CategoryPage = () => {
               <div className="text-center py-16">
                 <div className="max-w-md mx-auto">
                   <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <FiFilter className="h-12 w-12 text-gray-400" />
+                    <FiShoppingBag className="h-12 w-12 text-gray-400" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">Товары не найдены</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">В данной категории пока нет товаров</h3>
                   <p className="text-gray-600 mb-8 leading-relaxed">
-                    К сожалению, в данной категории нет товаров, соответствующих выбранным фильтрам. 
-                    Попробуйте изменить критерии поиска.
+                    Мы работаем над наполнением каталога. Попробуйте другие категории или вернитесь позже.
                   </p>
-                  <button
-                    onClick={clearFilters}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center space-x-2 mx-auto"
+                  <Link 
+                    to="/" 
+                    className="inline-flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg transform hover:scale-105 space-x-2"
                   >
-                    <FiRefreshCw className="h-5 w-5" />
-                    <span>Сбросить фильтры</span>
-                  </button>
+                    <FiArrowLeft className="h-5 w-5" />
+                    <span>На главную</span>
+                  </Link>
                 </div>
               </div>
             )}

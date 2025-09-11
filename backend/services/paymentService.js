@@ -48,16 +48,24 @@ class PaymentService {
   
   // Generate Payme payment URL
   generatePaymeUrl(order) {
-    const { _id, pricing, customer } = order;
+    const { _id, pricing, totalAmount, customer } = order;
+    const amount = Math.round((pricing?.total || totalAmount || 0) * 100); // Payme expects amount in tiyin (1 sum = 100 tiyin)
     
     const params = {
       'm': this.payme.merchantId,
       'ac.order_id': _id.toString(),
-      'a': Math.round(pricing.total * 100), // Payme expects amount in tiyin (1 sum = 100 tiyin)
-      'c': customer.phone || customer.email,
+      'a': amount,
+      'c': customer?.phone || customer?.email || '',
       'l': 'ru', // Language
       'cr': 'uzs' // Currency
     };
+
+    console.log('🔗 Payme URL params:', {
+      merchantId: this.payme.merchantId,
+      orderId: _id.toString(),
+      amount: amount,
+      customer: customer?.phone || customer?.email
+    });
 
     const queryString = new URLSearchParams(params).toString();
     return `${this.payme.endpoint}?${queryString}`;
@@ -98,16 +106,24 @@ class PaymentService {
   
   // Generate Click payment URL
   generateClickUrl(order) {
-    const { _id, pricing, customer } = order;
+    const { _id, pricing, totalAmount, customer } = order;
+    const amount = pricing?.total || totalAmount || 0;
     
     const params = {
       service_id: this.click.serviceId,
       merchant_id: this.click.merchantId,
-      amount: pricing.total,
+      amount: amount,
       transaction_param: _id.toString(),
-      return_url: `${process.env.CLIENT_URL}/payment/success`,
-      merchant_user_id: customer._id.toString()
+      return_url: `${process.env.FRONTEND_URL}/payment/success`,
+      merchant_user_id: customer?._id?.toString() || 'guest'
     };
+
+    console.log('🔗 Click URL params:', {
+      serviceId: this.click.serviceId,
+      merchantId: this.click.merchantId,
+      orderId: _id.toString(),
+      amount: amount
+    });
 
     const queryString = new URLSearchParams(params).toString();
     return `${this.click.endpoint}/services/pay?${queryString}`;

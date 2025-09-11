@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 
 async function createAdminSimple() {
   try {
-    await mongoose.connect('mongodb://localhost:27017/chexoluz');
+    await mongoose.connect('mongodb://localhost:27017/tendomarketuz');
 
     // Создаем схему напрямую
     const userSchema = new mongoose.Schema({

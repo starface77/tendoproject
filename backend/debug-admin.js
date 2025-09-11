@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 
 async function debugAdmin() {
   try {
-    await mongoose.connect('mongodb://localhost:27017/chexoluz');
+    await mongoose.connect('mongodb://localhost:27017/tendomarketuz');
     const User = require('./models/User');
 
     console.log('🔍 Ищем админа с email: tendo@admin.uz');

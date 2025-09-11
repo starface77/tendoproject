@@ -22,7 +22,7 @@ const Category = mongoose.model('Category', categorySchema);
 async function createTestCategory() {
   try {
     console.log('🔄 Подключаюсь к MongoDB...');
-    await mongoose.connect('mongodb://localhost:27017/chexoluz');
+    await mongoose.connect('mongodb://localhost:27017/tendomarketuz');
     console.log('✅ Подключено');
 
     // Проверяем существующую категорию

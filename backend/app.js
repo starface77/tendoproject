@@ -454,7 +454,7 @@ app.get('/', (req, res) => {
 app.get(`/api/${apiVersion}/docs`, (req, res) => {
   res.json({
     message: 'API Documentation будет добавлена позже',
-    contact: 'support@chexol.uz'
+    contact: 'support@tendo.uz'
   });
 });
 
@@ -475,7 +475,7 @@ const startServer = async () => {
     const server = app.listen(PORT, () => {
       console.log('');
       console.log('🟢 ==========================================');
-      console.log('🚀    CHEXOL.UZ BACKEND API ЗАПУЩЕН');
+      console.log('🚀    TENDO.UZ BACKEND API ЗАПУЩЕН');
       console.log('🟢 ==========================================');
       console.log(`📍 Сервер:        http://localhost:${PORT}`);
       console.log(`🌐 API:           http://localhost:${PORT}/api/${apiVersion}`);

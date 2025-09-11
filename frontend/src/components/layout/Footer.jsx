@@ -50,11 +50,18 @@ const Footer = () => {
           {/* Company Info */}
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <HiOutlineShoppingBag className="w-5 h-5 text-white" />
-              </div>
+              <svg className="h-8 w-8 text-blue-600" fill="none" height="34" viewBox="0 0 34 34" width="34" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16.8571 0.428467C16.8571 0.428467 27.2142 5.09513 29.8571 7.28561C32.5 9.47608 33.5714 14.5713 33.5714 17.1427C33.5714 19.7142 32.5 25.238 29.8571 27.4284C27.2142 29.6189 16.8571 33.857 16.8571 33.857C16.8571 33.857 6.49995 29.2856 3.85709 27.0951C1.21423 24.9046 0.428522 19.8094 0.428522 17.238C0.428522 14.6665 1.21423 9.14275 3.85709 6.95227C6.49995 4.7618 16.8571 0.428467 16.8571 0.428467Z" fill="url(#paint0_linear_101_2)"></path>
+                <path d="M13.235 11.2352L16.8571 17.1428L20.4791 11.2352H13.235Z" fill="white"></path>
+                <defs>
+                  <linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear_101_2" x1="16.9999" x2="16.9999" y1="0.428467" y2="33.857">
+                    <stop stopColor="#2563EB"></stop>
+                    <stop offset="1" stopColor="#1D4ED8"></stop>
+                  </linearGradient>
+                </defs>
+              </svg>  
               <div className="flex flex-col">
-                <h2 className="text-xl font-semibold text-gray-900 leading-tight">Tendo Market</h2>
+                <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight leading-tight">tendo</h2>
                 <p className="text-gray-500 text-sm">{t('nav.support', 'Ваш надежный партнер')}</p>
               </div>
             </div>
@@ -154,7 +161,7 @@ const Footer = () => {
             {/* Copyright */}
             <div className="text-center lg:text-left">
               <div className="text-gray-500 text-xs sm:text-sm mb-2">
-                © {currentYear} Tendo Market. {t('all_rights_reserved', 'Все права защищены.')} 
+                © {currentYear} tendo. {t('all_rights_reserved', 'Все права защищены.')} 
               </div>
               <div className="flex items-center justify-center lg:justify-start space-x-3 sm:space-x-4 text-xs text-gray-400">
                 <span>❤️ Сделано в Узбекистане</span>

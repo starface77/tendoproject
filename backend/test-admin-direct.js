@@ -5,7 +5,7 @@ const User = require('./models/User');
 // Подключаемся к MongoDB
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/chexoluz', {
+    await mongoose.connect('mongodb://localhost:27017/tendomarketuz', {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });

@@ -6,7 +6,7 @@ async function createAdminDirect() {
     console.log('🔄 Подключаемся к MongoDB...');
 
     // Простое подключение без лишних опций
-    await mongoose.connect('mongodb://localhost:27017/chexoluz');
+    await mongoose.connect('mongodb://localhost:27017/tendomarketuz');
 
     console.log('✅ Подключено к MongoDB');
 

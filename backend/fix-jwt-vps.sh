@@ -184,3 +184,5 @@ echo "📋 ЕСЛИ ПРОБЛЕМА ОСТАЕТСЯ:"
 echo "1. Проверьте логи: pm2 logs tendo-backend"
 echo "2. Проверьте MongoDB: sudo systemctl status mongodb"
 echo "3. Проверьте Nginx: sudo systemctl status nginx"
+
+

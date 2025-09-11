@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 async function setupTestData() {
   try {
     console.log('🔄 Подключаюсь к MongoDB...');
-    await mongoose.connect('mongodb://localhost:27017/chexoluz');
+    await mongoose.connect('mongodb://localhost:27017/tendomarketuz');
     console.log('✅ Подключено к MongoDB');
 
     // Создаем схемы

@@ -8,7 +8,7 @@ async function createUserDirect() {
     await client.connect();
     console.log('✅ Подключено к MongoDB');
 
-    const db = client.db('chexoluz');
+    const db = client.db('tendomarketuz');
     const users = db.collection('users');
 
     // Проверяем существующего админа

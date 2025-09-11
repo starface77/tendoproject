@@ -12,7 +12,7 @@ const { connectDB } = require('../config/database');
 const createAdminUser = async () => {
   try {
     const adminUser = new User({
-      email: 'admin@chexol.uz',
+      email: 'admin@tendo.uz',
       password: 'admin123',
       firstName: 'Admin',
       lastName: 'Market',

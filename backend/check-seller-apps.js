@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 async function checkSellerApps() {
   try {
-    await mongoose.connect('mongodb://localhost:27017/chexoluz');
+    await mongoose.connect('mongodb://localhost:27017/tendomarketuz');
     console.log('✅ Подключено к MongoDB');
 
     const db = mongoose.connection.db;
