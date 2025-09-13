@@ -14,6 +14,16 @@ const ProductSlider = ({ products, title, seeAllUrl }) => {
 
   return (
     <div className="relative">
+      {title && (
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">{title}</h3>
+          {seeAllUrl && (
+            <a href={seeAllUrl} className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+              Смотреть все
+            </a>
+          )}
+        </div>
+      )}
       <Swiper
         modules={[Navigation, Scrollbar, FreeMode]}
         spaceBetween={16}

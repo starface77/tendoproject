@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FiArrowRight, FiWifiOff, FiRefreshCw } from 'react-icons/fi'
-import ProductCard from '../components/product/ProductCard'
+// import ProductCard from '../components/product/ProductCard'
 import CategoryCard from '../components/category/CategoryCard'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import BannerSlider from '../components/ui/BannerSlider'
 import ProductSlider from '../components/ui/ProductSlider'
-import { categoriesApi, productsApi, checkApiHealth, bannersApi } from '../services/api'
+import { categoriesApi, checkApiHealth, bannersApi, sectionsApi } from '../services/api'
 import { useLanguage } from '../contexts/LanguageContext'
 
 const HomePage = () => {
   const { t } = useLanguage()
-  const [featuredProducts, setFeaturedProducts] = useState([])
+  // const [featuredProducts, setFeaturedProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [banners, setBanners] = useState([])
+  const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -43,14 +44,18 @@ const HomePage = () => {
 
         setCategories(processedCategories)
         
-        // Загружаем популярные товары (используем обычные товары вместо featured)
-        const productsResponse = await productsApi.getProducts({ limit: 8, sort: '-createdAt' })
-        setFeaturedProducts(productsResponse.data || [])
+        // Загружаем популярные товары (fallback для старого блока)
+        // const productsResponse = await productsApi.getProducts({ limit: 8, sort: '-createdAt' })
+        // setFeaturedProducts(productsResponse.data || [])
 
         // Загружаем баннеры
         const bannersResponse = await bannersApi.getBanners()
         const bannersData = bannersResponse.data || []
         setBanners(bannersData)
+
+        // Загружаем динамические секции
+        const sectionsResponse = await sectionsApi.getSections()
+        setSections(sectionsResponse.data || [])
       } else {
         throw new Error('API недоступен')
       }
@@ -60,8 +65,8 @@ const HomePage = () => {
       
       // Показываем пустую страницу если API недоступен
       setCategories([])
-      setFeaturedProducts([])
       setBanners([])
+      setSections([])
     } finally {
       setLoading(false)
     }
@@ -128,25 +133,18 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="bg-gray-50 py-8 sm:py-12">
-        <div className="container-custom">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('homepage.recommended_products')}</h2>
-            <Link to="/catalog" className="text-blue-700 hover:text-blue-800 font-medium flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base">
-              <span className="hidden sm:inline">{t('homepage.view_all', 'Смотреть все')}</span>
-              <span className="sm:hidden">Все</span>
-              <FiArrowRight className="h-4 w-4" />
-            </Link>
+      {/* Dynamic Sections from Admin */}
+      {sections && sections.length > 0 && sections.map((s) => (
+        <section key={s.id} className="bg-gray-50 py-8 sm:py-12">
+          <div className="container-custom">
+            <ProductSlider 
+              products={s.products || []}
+              title={s.title}
+              seeAllUrl={s.key ? `/catalog?section=${s.key}` : '/catalog'}
+            />
           </div>
-
-          <ProductSlider 
-            products={featuredProducts} 
-            title="Рекомендуемые товары"
-            seeAllUrl="/catalog"
-          />
-        </div>
-      </section>
+        </section>
+      ))}
 
     </div>
   )

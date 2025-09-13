@@ -258,31 +258,31 @@ router.put('/seller-applications/:id/request-documents', requestDocuments);
 // @desc    Get all sellers
 // @route   GET /api/v1/admin/sellers
 // @access  Private (Admin)
-router.get('/sellers', getSellers);
+// router.get('/sellers', getSellers);
 
 // @desc    Get single seller
 // @route   GET /api/v1/admin/sellers/:id
 // @access  Private (Admin)
-router.get('/sellers/:id', getSeller);
+// // router.get('/sellers/:id', getSeller);
 
 // @desc    Suspend seller
 // @route   PATCH /api/v1/admin/sellers/:id/suspend
 // @access  Private (Admin)
-router.patch('/sellers/:id/suspend', suspendSeller);
+// router.patch('/sellers/:id/suspend', suspendSeller);
 
 // @desc    Unsuspend seller
 // @route   PATCH /api/v1/admin/sellers/:id/unsuspend
 // @access  Private (Admin)
-router.patch('/sellers/:id/unsuspend', unsuspendSeller);
+// router.patch('/sellers/:id/unsuspend', unsuspendSeller);
 
 // @desc    Update seller commission
 // @route   PATCH /api/v1/admin/sellers/:id/commission
 // @access  Private (Admin)
-router.patch('/sellers/:id/commission', updateCommission);
+// router.patch('/sellers/:id/commission', updateCommission);
 
 // @desc    Get seller analytics
 // @route   GET /api/v1/admin/sellers/:id/analytics
 // @access  Private (Admin)
-router.get('/sellers/:id/analytics', getSellerAnalytics);
+// router.get('/sellers/:id/analytics', getSellerAnalytics);
 
 module.exports = router;

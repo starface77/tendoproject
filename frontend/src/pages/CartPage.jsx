@@ -141,13 +141,13 @@ const CartPage = () => {
             <span>{t('cart.back', 'Back')}</span>
           </button>
 
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="heading-xl">
             {t('cart.title', 'Shopping Cart')} ({totalItems})
           </h1>
 
           <button
             onClick={clearCart}
-            className="text-red-600 hover:text-red-700 font-medium transition-colors"
+            className="btn-link text-red-600 hover:text-red-700"
           >
             {t('cart.clear_cart', 'Clear Cart')}
           </button>
@@ -256,21 +256,21 @@ const CartPage = () => {
                 </div>
               )}
 
-              {/* Checkout Button - красивая */}
+              {/* Checkout Button - unified */}
               <button
                 onClick={handleCheckout}
                 disabled={isCheckingOut}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`btn-primary w-full justify-center ${isCheckingOut ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 {isCheckingOut ? (
                   <div className="flex items-center justify-center space-x-3">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Обработка заказа...</span>
+                    <span>{t('processing_order', 'Обработка заказа...')}</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center space-x-3">
                     <FiCreditCard className="h-6 w-6" />
-                    <span>Оформить заказ</span>
+                    <span>{t('proceed_to_checkout', 'Оформить заказ')}</span>
                   </div>
                 )}
               </button>

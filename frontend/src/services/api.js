@@ -497,7 +497,7 @@ export const bannersApi = {
   },
   createBanner: async (banner) => {
     try {
-      const response = await api.post('/banners/admin', banner)
+      const response = await api.post('/banners', banner)
       return response.data
     } catch (error) {
       handleApiError(error)
@@ -505,7 +505,7 @@ export const bannersApi = {
   },
   updateBanner: async (id, banner) => {
     try {
-      const response = await api.put(`/banners/admin/${id}`, banner)
+      const response = await api.put(`/banners/${id}`, banner)
       return response.data
     } catch (error) {
       handleApiError(error)
@@ -513,12 +513,56 @@ export const bannersApi = {
   },
   deleteBanner: async (id) => {
     try {
-      const response = await api.delete(`/banners/admin/${id}`)
+      const response = await api.delete(`/banners/${id}`)
       return response.data
     } catch (error) {
       handleApiError(error)
     }
   }
+}
+
+// Sections API
+export const sectionsApi = {
+  getSections: async () => {
+    try {
+      const response = await api.get('/sections')
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+  getAdminSections: async () => {
+    try {
+      const response = await api.get('/sections/admin')
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+  createSection: async (data) => {
+    try {
+      const response = await api.post('/sections', data)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+  updateSection: async (id, data) => {
+    try {
+      const response = await api.put(`/sections/${id}`, data)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+  deleteSection: async (id) => {
+    try {
+      const response = await api.delete(`/sections/${id}`)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
 }
 
 // ==================================================
@@ -610,6 +654,16 @@ export const sellerApi = {
   deleteProduct: async (productId) => {
     try {
       const response = await api.delete(`/sellers/me/products/${productId}`)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Обновить статус заказа
+  updateOrderStatus: async (orderId, status) => {
+    try {
+      const response = await api.put(`/sellers/me/orders/${orderId}/status`, { status })
       return response.data
     } catch (error) {
       handleApiError(error)

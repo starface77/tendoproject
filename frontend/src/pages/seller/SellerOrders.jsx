@@ -68,6 +68,42 @@ const SellerOrders = () => {
     return new Intl.NumberFormat('ru-RU').format(price || 0) + ' сум';
   };
 
+  // Обновить статус заказа
+  const updateOrderStatus = async (orderId, newStatus) => {
+    try {
+      const response = await api.seller.updateOrderStatus(orderId, newStatus);
+      if (response.success) {
+        // Обновляем локальный список заказов
+        setOrders(orders.map(order => 
+          order._id === orderId ? { ...order, status: newStatus } : order
+        ));
+        alert('Статус заказа обновлен!');
+      } else {
+        alert('Ошибка обновления статуса');
+      }
+    } catch (error) {
+      console.error('Ошибка обновления статуса:', error);
+      alert('Ошибка обновления статуса');
+    }
+  };
+
+  // Принять заказ
+  const acceptOrder = (orderId) => {
+    updateOrderStatus(orderId, 'processing');
+  };
+
+  // Отклонить заказ
+  const rejectOrder = (orderId) => {
+    if (confirm('Вы уверены, что хотите отклонить этот заказ?')) {
+      updateOrderStatus(orderId, 'cancelled');
+    }
+  };
+
+  // Отправить заказ
+  const shipOrder = (orderId) => {
+    updateOrderStatus(orderId, 'shipped');
+  };
+
   const filteredOrders = orders.filter(order => {
     if (filter === 'all') return true;
     return order.status === filter;
@@ -191,10 +227,39 @@ const SellerOrders = () => {
                     </div>
                   </div>
                   
-                  <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <FiEye className="h-4 w-4 mr-2" />
-                    {t('view', 'Просмотр')}
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    {/* Кнопки управления в зависимости от статуса */}
+                    {order.status === 'pending' && (
+                      <>
+                        <button 
+                          onClick={() => acceptOrder(order._id)}
+                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                        >
+                          ✅ Принять
+                        </button>
+                        <button 
+                          onClick={() => rejectOrder(order._id)}
+                          className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
+                        >
+                          ❌ Отклонить
+                        </button>
+                      </>
+                    )}
+                    
+                    {order.status === 'processing' && (
+                      <button 
+                        onClick={() => shipOrder(order._id)}
+                        className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors"
+                      >
+                        🚚 Отправить
+                      </button>
+                    )}
+                    
+                    <button className="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors">
+                      <FiEye className="h-4 w-4 mr-1" />
+                      Детали
+                    </button>
+                  </div>
                 </div>
 
                 {/* Customer Info */}

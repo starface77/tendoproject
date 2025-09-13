@@ -36,9 +36,11 @@ const OrderTrackingPage = () => {
           setPayment(paymentResponse.data)
         }
       } catch (apiError) {
-        console.log('API не отвечает, используем демо данные')
+        console.error('Ошибка загрузки заказа:', apiError)
+        setError('Заказ не найден или произошла ошибка при загрузке')
+        return
         
-        // Демо данные для тестирования дизайна
+        // Удалены демо данные - используем только реальные данные из API
         const demoOrder = {
           _id: orderId,
           orderNumber: 'TMD' + Date.now().toString().slice(-6),

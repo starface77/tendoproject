@@ -1,0 +1,5 @@
+router.post('/', [
+  body('items').isArray().withMessage('Товары должны быть массивом'),
+  body('items.*.productId').isMongoId().withMessage('Некорректный ID товара'),
+  body('items.*.quantity').isNumeric().custom((value) => parseInt(value) >= 1).withMessage('Некорректное количество'),
+], createOrder);

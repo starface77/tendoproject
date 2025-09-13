@@ -45,15 +45,7 @@ const createBanner = async (req, res) => {
   try {
     console.log('🎨 Creating banner with data:', req.body);
     
-    const { imageUrl, targetUrl, order, isActive, validFrom, validTo, title, subtitle, badgeText, bgColor, bgGradient } = req.body;
-    
-    // Валидация обязательных полей
-    if (!title || !title.trim()) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Название баннера обязательно' 
-      });
-    }
+    const { imageUrl, targetUrl, order, isActive, validFrom, validTo } = req.body;
     
     if (!imageUrl || typeof imageUrl !== 'string') {
       return res.status(400).json({ 
@@ -69,11 +61,6 @@ const createBanner = async (req, res) => {
       isActive: isActive !== undefined ? isActive : true,
       validFrom: validFrom ? new Date(validFrom) : new Date(),
       validTo: validTo ? new Date(validTo) : null,
-      title: title.trim(),
-      subtitle: subtitle || '',
-      badgeText: badgeText || '',
-      bgColor: bgColor || '#ffffff',
-      bgGradient: bgGradient || '',
       createdBy: req.user?._id
     };
 

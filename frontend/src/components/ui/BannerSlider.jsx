@@ -2,7 +2,6 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules'
-import { FiArrowRight } from 'react-icons/fi'
 
 // Import Swiper styles
 import 'swiper/css'
@@ -59,30 +58,10 @@ const BannerSlider = ({ banners }) => {
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-700"></div>
               )}
 
-              {/* Content */}
-              <div className="relative px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 md:py-16 lg:py-20 h-full flex items-center">
-                <div className="max-w-2xl">
-                  {banner.title && (
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 md:mb-6 leading-tight">
-                      {banner.title}
-                    </h1>
-                  )}
-                  {banner.description && (
-                    <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 max-w-xl opacity-90 leading-relaxed">
-                      {banner.description}
-                    </p>
-                  )}
-                  {banner.targetUrl && (
-                    <Link
-                      to={banner.targetUrl}
-                      className="inline-flex items-center px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-white text-gray-900 rounded-lg sm:rounded-xl hover:bg-gray-100 transition-all duration-300 font-semibold text-sm sm:text-base md:text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      <span>Смотреть товары</span>
-                      <FiArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-                    </Link>
-                  )}
-                </div>
-              </div>
+              {/* Simplified: image + optional link overlay */}
+              {banner.targetUrl && (
+                <Link to={banner.targetUrl} className="absolute inset-0" aria-label="banner-link" />
+              )}
             </div>
           </SwiperSlide>
         ))}
@@ -108,6 +87,8 @@ const BannerSlider = ({ banners }) => {
 }
 
 export default BannerSlider
+
+
 
 
 

@@ -47,6 +47,7 @@ const chatRoutes = require('./routes/chat');
 const favoritesRoutes = require('./routes/favorites');
 const reviewsRoutes = require('./routes/reviews');
 const bannersRoutes = require('./routes/banners');
+const homeSectionsRoutes = require('./routes/homeSections');
 const contactRoutes = require('./routes/contacts');
 const paymentsRoutes = require('./routes/payments');
 
@@ -421,6 +422,7 @@ app.use(`/api/${apiVersion}/chats`, chatRoutes);
 app.use(`/api/${apiVersion}/favorites`, favoritesRoutes);
 app.use(`/api/${apiVersion}/reviews`, reviewsRoutes);
 app.use(`/api/${apiVersion}/banners`, bannersRoutes);
+app.use(`/api/${apiVersion}/sections`, homeSectionsRoutes);
 app.use(`/api/${apiVersion}/contacts`, require('./routes/contacts'));
 app.use(`/api/${apiVersion}/notifications`, require('./routes/notifications'));
 app.use(`/api/${apiVersion}/search`, require('./routes/search')); // Продвинутый поиск

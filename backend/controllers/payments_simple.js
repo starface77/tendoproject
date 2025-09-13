@@ -1,0 +1,1 @@
+const createPayment = async (req, res) => { try { console.log("💳 PAYMENT:", req.body); res.json({ success: true, data: { id: "pay123", status: "pending", paymentUrl: "https://test.uz" } }); } catch (error) { res.status(500).json({ success: false, error: error.message }); } }; module.exports = { createPayment };

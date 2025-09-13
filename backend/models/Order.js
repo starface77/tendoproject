@@ -365,7 +365,7 @@ orderSchema.index({ 'delivery.estimatedDate': 1 });
 // 🔧 MIDDLEWARE
 orderSchema.pre('save', function(next) {
   // Автогенерация номера заказа
-  if (this.isNew && !this.orderNumber) {
+  if (this.isNew || !this.orderNumber) {
     const prefix = 'CHX';
     const timestamp = Date.now().toString().slice(-8);
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');

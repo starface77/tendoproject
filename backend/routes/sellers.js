@@ -22,7 +22,8 @@ const {
   createSellerProduct,
   updateSellerProduct,
   deleteSellerProduct,
-  getSellerProfile
+  getSellerProfile,
+  updateOrderStatus
 } = require('../controllers/sellers');
 
 // Временные заглушки для публичных seller страниц
@@ -212,6 +213,7 @@ router.put('/me/products/:id', updateSellerProduct);
 router.delete('/me/products/:id', deleteSellerProduct);
 router.get('/me/finance', getFinance);
 router.get('/me/orders', getOrders);
+router.put('/me/orders/:id/status', updateOrderStatus);
 
 module.exports = router;
 
