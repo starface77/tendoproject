@@ -222,16 +222,16 @@ const CheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container-custom py-6">
         
         {/* Заголовок */}
         <div className="mb-8">
           <button
             onClick={() => navigate('/cart')}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center text-gray-600 hover:text-blue-600 mb-4"
           >
             <FiArrowLeft className="mr-2" />
-{t('back_to_cart', 'Вернуться в корзину')}
+            <span>{t('back_to_cart', 'Вернуться в корзину')}</span>
           </button>
           <h1 className="text-2xl font-bold text-gray-900">{t('checkout_title', 'Оформление заказа')}</h1>
         </div>
@@ -246,20 +246,20 @@ const CheckoutPage = () => {
               { step: 4, title: t('order_confirmation', 'Подтверждение'), icon: FiCheck }
             ].map(({ step, title, icon: Icon }) => (
               <div key={step} className="flex items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${
                   currentStep >= step 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-200 text-gray-600'
                 }`}>
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-3 w-3" />
                 </div>
-                <span className={`ml-2 text-sm font-medium ${
+                <span className={`ml-2 text-xs font-semibold ${
                   currentStep >= step ? 'text-blue-600' : 'text-gray-600'
                 }`}>
                   {title}
                 </span>
                 {step < 4 && (
-                  <div className={`w-16 h-1 mx-4 ${
+                  <div className={`w-8 h-0.5 mx-2 ${
                     currentStep > step ? 'bg-blue-600' : 'bg-gray-200'
                   }`} />
                 )}
@@ -275,57 +275,57 @@ const CheckoutPage = () => {
             
             {/* Шаг 1: Адрес доставки */}
             {currentStep === 1 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">Адрес доставки</h2>
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-6">Адрес доставки</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Имя *
                     </label>
                     <input
                       type="text"
                       value={orderData.address.firstName}
                       onChange={(e) => updateOrderData('address', 'firstName', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Фамилия *
                     </label>
                     <input
                       type="text"
                       value={orderData.address.lastName}
                       onChange={(e) => updateOrderData('address', 'lastName', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Телефон *
                     </label>
                     <input
                       type="tel"
                       value={orderData.address.phone}
                       onChange={(e) => updateOrderData('address', 'phone', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Город *
                     </label>
                     <select
                       value={orderData.address.city}
                       onChange={(e) => updateOrderData('address', 'city', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     >
                       {cities.map(city => (
@@ -337,52 +337,52 @@ const CheckoutPage = () => {
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Улица *
                     </label>
                     <input
                       type="text"
                       value={orderData.address.street}
                       onChange={(e) => updateOrderData('address', 'street', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Дом *
                     </label>
                     <input
                       type="text"
                       value={orderData.address.house}
                       onChange={(e) => updateOrderData('address', 'house', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Квартира
                     </label>
                     <input
                       type="text"
                       value={orderData.address.apartment}
                       onChange={(e) => updateOrderData('address', 'apartment', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Комментарий для курьера
                     </label>
                     <textarea
                       value={orderData.address.comment}
                       onChange={(e) => updateOrderData('address', 'comment', e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Дополнительная информация для доставки..."
                     />
                   </div>
@@ -392,16 +392,16 @@ const CheckoutPage = () => {
 
             {/* Шаг 2: Способ доставки */}
             {currentStep === 2 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">Способ доставки</h2>
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-6">Способ доставки</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {deliveryOptions.map(option => (
                     <label
                       key={option.type}
-                      className={`block p-4 border rounded-lg cursor-pointer transition-colors ${
+                      className={`block p-4 border rounded-lg cursor-pointer transition-all ${
                         orderData.delivery.type === option.type
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-blue-500 bg-blue-50 shadow-sm'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -418,14 +418,14 @@ const CheckoutPage = () => {
                       />
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <span className="text-2xl mr-3">{option.icon}</span>
+                          <span className="text-xl mr-3">{option.icon}</span>
                           <div>
-                            <div className="font-medium text-gray-900">{option.name}</div>
+                            <div className="font-semibold text-gray-900">{option.name}</div>
                             <div className="text-sm text-gray-600">{option.description}</div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium text-gray-900">
+                          <div className="font-semibold text-gray-900">
                             {option.cost === 0 ? 'Бесплатно' : formatPrice(option.cost)}
                           </div>
                         </div>
@@ -438,16 +438,16 @@ const CheckoutPage = () => {
 
             {/* Шаг 3: Способ оплаты */}
             {currentStep === 3 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">Способ оплаты</h2>
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-6">Способ оплаты</h2>
                 
-                <div className="space-y-4 mb-6">
+                <div className="space-y-3 mb-6">
                   {paymentMethods.map(method => (
                     <label
                       key={method.method}
-                      className={`block p-4 border rounded-lg cursor-pointer transition-colors ${
+                      className={`block p-4 border rounded-lg cursor-pointer transition-all ${
                         orderData.payment.method === method.method
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-blue-500 bg-blue-50 shadow-sm'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -460,9 +460,9 @@ const CheckoutPage = () => {
                         className="sr-only"
                       />
                       <div className="flex items-center">
-                        <span className="text-2xl mr-3">{method.icon}</span>
+                        <span className="text-xl mr-3">{method.icon}</span>
                         <div>
-                          <div className="font-medium text-gray-900">{method.name}</div>
+                          <div className="font-semibold text-gray-900">{method.name}</div>
                           <div className="text-sm text-gray-600">{method.description}</div>
                         </div>
                       </div>
@@ -472,11 +472,11 @@ const CheckoutPage = () => {
 
                 {/* Форма карты */}
                 {orderData.payment.method === 'card' && (
-                  <div className="border-t pt-6">
-                    <h3 className="font-medium text-gray-900 mb-4">Данные банковской карты</h3>
+                  <div className="border-t border-gray-200 pt-6">
+                    <h3 className="font-semibold text-gray-900 mb-4">Данные банковской карты</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Номер карты *
                         </label>
                         <input
@@ -484,12 +484,12 @@ const CheckoutPage = () => {
                           value={orderData.payment.cardNumber}
                           onChange={(e) => updateOrderData('payment', 'cardNumber', e.target.value)}
                           placeholder="1234 5678 9012 3456"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           required
                         />
                       </div>
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Имя на карте *
                         </label>
                         <input
@@ -497,12 +497,12 @@ const CheckoutPage = () => {
                           value={orderData.payment.cardName}
                           onChange={(e) => updateOrderData('payment', 'cardName', e.target.value)}
                           placeholder="JOHN SMITH"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           required
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Срок действия *
                         </label>
                         <input
@@ -510,12 +510,12 @@ const CheckoutPage = () => {
                           value={orderData.payment.cardExpiry}
                           onChange={(e) => updateOrderData('payment', 'cardExpiry', e.target.value)}
                           placeholder="MM/YY"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           required
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                           CVV *
                         </label>
                         <input
@@ -523,7 +523,7 @@ const CheckoutPage = () => {
                           value={orderData.payment.cardCvv}
                           onChange={(e) => updateOrderData('payment', 'cardCvv', e.target.value)}
                           placeholder="123"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           required
                         />
                       </div>
@@ -535,16 +535,16 @@ const CheckoutPage = () => {
 
             {/* Шаг 4: Подтверждение */}
             {currentStep === 4 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">Подтверждение заказа</h2>
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-6">Подтверждение заказа</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-2">Адрес доставки</h3>
-                    <div className="text-sm text-gray-600">
-                      <p>{orderData.address.firstName} {orderData.address.lastName}</p>
-                      <p>{orderData.address.phone}</p>
-                      <p>
+                    <h3 className="font-semibold text-gray-900 mb-3">Адрес доставки</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-900 font-medium">{orderData.address.firstName} {orderData.address.lastName}</p>
+                      <p className="text-gray-600">{orderData.address.phone}</p>
+                      <p className="text-gray-600">
                         {cities.find(c => c.value === orderData.address.city)?.name}, 
                         {orderData.address.street}, д. {orderData.address.house}
                         {orderData.address.apartment && `, кв. ${orderData.address.apartment}`}
@@ -552,39 +552,39 @@ const CheckoutPage = () => {
                     </div>
                     <button
                       onClick={() => setCurrentStep(1)}
-                      className="text-blue-600 hover:text-blue-700 text-sm flex items-center mt-2"
+                      className="text-blue-600 hover:text-blue-700 text-sm flex items-center mt-2 font-semibold"
                     >
                       <FiEdit3 className="mr-1 h-3 w-3" />
-                      Изменить
+                      <span>Изменить</span>
                     </button>
                   </div>
 
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-2">Доставка</h3>
-                    <div className="text-sm text-gray-600">
-                      <p>{deliveryOptions.find(d => d.type === orderData.delivery.type)?.name}</p>
-                      <p>{formatPrice(orderData.delivery.cost)}</p>
+                    <h3 className="font-semibold text-gray-900 mb-3">Доставка</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-900 font-medium">{deliveryOptions.find(d => d.type === orderData.delivery.type)?.name}</p>
+                      <p className="text-gray-600">{formatPrice(orderData.delivery.cost)}</p>
                     </div>
                     <button
                       onClick={() => setCurrentStep(2)}
-                      className="text-blue-600 hover:text-blue-700 text-sm flex items-center mt-2"
+                      className="text-blue-600 hover:text-blue-700 text-sm flex items-center mt-2 font-semibold"
                     >
                       <FiEdit3 className="mr-1 h-3 w-3" />
-                      Изменить
+                      <span>Изменить</span>
                     </button>
                   </div>
 
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-2">Оплата</h3>
-                    <div className="text-sm text-gray-600">
-                      <p>{paymentMethods.find(p => p.method === orderData.payment.method)?.name}</p>
+                    <h3 className="font-semibold text-gray-900 mb-3">Оплата</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-900 font-medium">{paymentMethods.find(p => p.method === orderData.payment.method)?.name}</p>
                     </div>
                     <button
                       onClick={() => setCurrentStep(3)}
-                      className="text-blue-600 hover:text-blue-700 text-sm flex items-center mt-2"
+                      className="text-blue-600 hover:text-blue-700 text-sm flex items-center mt-2 font-semibold"
                     >
                       <FiEdit3 className="mr-1 h-3 w-3" />
-                      Изменить
+                      <span>Изменить</span>
                     </button>
                   </div>
                 </div>
@@ -596,35 +596,39 @@ const CheckoutPage = () => {
               <button
                 onClick={handlePrevStep}
                 disabled={currentStep === 1}
-                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                className={`flex items-center px-4 py-2.5 rounded-lg transition-colors font-semibold ${
                   currentStep === 1
                     ? 'text-gray-400 cursor-not-allowed'
-                    : 'text-gray-600 hover:text-gray-900'
+                    : 'text-gray-600 hover:text-blue-600'
                 }`}
               >
                 <FiArrowLeft className="mr-2" />
-{t('previous_step', 'Назад')}
+                <span>{t('previous_step', 'Назад')}</span>
               </button>
 
               {currentStep < 4 ? (
                 <button
                   onClick={handleNextStep}
                   disabled={!validateStep(currentStep)}
-                  className={`px-6 py-2 rounded-lg transition-colors ${
+                  className={`px-6 py-2.5 rounded-lg transition-colors font-semibold ${
                     validateStep(currentStep)
                       ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-{t('next_step', 'Далее')}
+                  <span>{t('next_step', 'Далее')}</span>
                 </button>
               ) : (
                 <button
                   onClick={submitOrder}
                   disabled={loading}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-300"
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:bg-gray-300"
                 >
-{loading ? t('processing', 'Оформляем...') : t('place_order', 'Оформить заказ')}
+                  {loading ? (
+                    <span>{t('processing', 'Оформляем...')}</span>
+                  ) : (
+                    <span>{t('place_order', 'Оформить заказ')}</span>
+                  )}
                 </button>
               )}
             </div>
@@ -632,8 +636,8 @@ const CheckoutPage = () => {
 
           {/* Сайдбар с итогами */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Ваш заказ</h3>
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm sticky top-6">
+              <h3 className="font-bold text-gray-900 mb-4">Ваш заказ</h3>
               
               {/* Товары */}
               <div className="space-y-3 mb-4">
@@ -648,7 +652,7 @@ const CheckoutPage = () => {
                       }}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">{item.title}</p>
                       <p className="text-xs text-gray-500">
                         {item.quantity} шт. × {formatPrice(item.price)}
                       </p>
@@ -657,7 +661,7 @@ const CheckoutPage = () => {
                 ))}
               </div>
 
-              <div className="border-t pt-4 space-y-2">
+              <div className="border-t border-gray-200 pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Товары ({cartItems.length})</span>
                   <span>{formatPrice(subtotal)}</span>
@@ -668,7 +672,7 @@ const CheckoutPage = () => {
                     {deliveryCost === 0 ? 'Бесплатно' : formatPrice(deliveryCost)}
                   </span>
                 </div>
-                <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                <div className="flex justify-between font-bold text-lg border-t border-gray-200 pt-2">
                   <span>Итого</span>
                   <span>{formatPrice(total)}</span>
                 </div>
@@ -682,4 +686,3 @@ const CheckoutPage = () => {
 }
 
 export default CheckoutPage
-

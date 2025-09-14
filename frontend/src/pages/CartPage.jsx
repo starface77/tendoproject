@@ -106,21 +106,21 @@ const CartPage = () => {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="container-custom">
           <div className="max-w-md mx-auto text-center">
-            <div className="w-32 h-32 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-              <FiShoppingCart className="h-16 w-16 text-gray-400" />
+            <div className="w-24 h-24 mx-auto mb-6 bg-blue-50 rounded-full flex items-center justify-center">
+              <FiShoppingCart className="h-12 w-12 text-blue-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              {t('cart.empty', 'Your cart is empty')}
+              {t('cart.empty', 'Корзина пуста')}
             </h1>
             <p className="text-gray-600 mb-8">
-              {t('cart.empty_desc', 'Add items to your cart to continue shopping')}
+              {t('cart.empty_desc', 'Добавьте товары в корзину для продолжения покупок')}
             </p>
             <Link
               to="/"
-              className="btn-primary inline-flex items-center space-x-2"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
             >
-              <FiShoppingCart className="h-5 w-5" />
-              <span>{t('cart.go_shopping', 'Go Shopping')}</span>
+              <FiShoppingCart className="h-5 w-5 mr-2" />
+              <span>{t('cart.go_shopping', 'Перейти к покупкам')}</span>
             </Link>
           </div>
         </div>
@@ -135,38 +135,38 @@ const CartPage = () => {
         <div className="flex items-center justify-between mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
           >
             <FiArrowLeft className="h-5 w-5" />
-            <span>{t('cart.back', 'Back')}</span>
+            <span>{t('cart.back', 'Назад')}</span>
           </button>
 
-          <h1 className="heading-xl">
-            {t('cart.title', 'Shopping Cart')} ({totalItems})
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t('cart.title', 'Корзина')} ({totalItems})
           </h1>
 
           <button
             onClick={clearCart}
-            className="btn-link text-red-600 hover:text-red-700"
+            className="text-red-600 hover:text-red-700 text-sm font-semibold"
           >
-            {t('cart.clear_cart', 'Clear Cart')}
+            {t('cart.clear_cart', 'Очистить корзину')}
           </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
               <div className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                  {t('cart.items_count', 'Items')} ({totalItems})
+                <h2 className="text-lg font-bold text-gray-900 mb-6">
+                  {t('cart.items_count', 'Товары')} ({totalItems})
                 </h2>
                 
                 <div className="space-y-4">
                   {cartItems.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+                    <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:border-blue-200 transition-colors">
                       {/* Product Image */}
-                      <div className="w-20 h-20 flex-shrink-0">
+                      <div className="w-16 h-16 flex-shrink-0">
                         <img
                           src={getItemImage(item.image)}
                           alt={item.name}
@@ -176,41 +176,41 @@ const CartPage = () => {
                       
                       {/* Product Info */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 truncate">
+                        <h3 className="font-semibold text-gray-900 truncate text-sm">
                           {item.name}
                         </h3>
-                        <p className="text-lg font-bold text-blue-600">
+                        <p className="text-base font-bold text-blue-600">
                           {formatPrice ? formatPrice(item.price) : `${item.price} сум`}
                         </p>
                       </div>
                       
-                      {/* Quantity Controls - красивые кнопки */}
-                      <div className="flex items-center space-x-3">
+                      {/* Quantity Controls */}
+                      <div className="flex items-center space-x-2">
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="w-9 h-9 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                          className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
                           disabled={item.quantity <= 1}
                         >
                           <FiMinus className="h-4 w-4 text-gray-600" />
                         </button>
                         
-                        <span className="w-12 text-center font-semibold text-lg">
+                        <span className="w-10 text-center font-semibold">
                           {item.quantity}
                         </span>
                         
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="w-9 h-9 flex items-center justify-center bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                          className="w-8 h-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                         >
                           <FiPlus className="h-4 w-4 text-white" />
                         </button>
                       </div>
                       
-                      {/* Remove Button - красивая */}
+                      {/* Remove Button */}
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        className="w-9 h-9 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 rounded-lg transition-colors"
-                        title={t('cart.remove_item', 'Remove Item')}
+                        className="w-8 h-8 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 rounded-lg transition-colors"
+                        title={t('cart.remove_item', 'Удалить')}
                       >
                         <FiTrash2 className="h-4 w-4" />
                       </button>
@@ -223,27 +223,27 @@ const CartPage = () => {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                {t('cart.order_summary', 'Order Summary')}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm sticky top-8">
+              <h2 className="text-lg font-bold text-gray-900 mb-6">
+                {t('cart.order_summary', 'Итого')}
               </h2>
 
               <div className="space-y-4 mb-6">
-                <div className="flex justify-between text-gray-600">
-                  <span>{t('cart.items_count', 'Items')} ({totalItems})</span>
+                <div className="flex justify-between text-gray-600 text-sm">
+                  <span>{t('cart.items_count', 'Товары')} ({totalItems})</span>
                   <span>{formatPrice ? formatPrice(totalAmount) : `${totalAmount} сум`}</span>
                 </div>
 
-                <div className="flex justify-between text-gray-600">
-                  <span>{t('cart.delivery', 'Delivery')}</span>
+                <div className="flex justify-between text-gray-600 text-sm">
+                  <span>{t('cart.delivery', 'Доставка')}</span>
                   <span>
-                    {getDeliveryFee() === 0 ? t('cart.free_delivery', 'Free') : `${getDeliveryFee()} сум`}
+                    {getDeliveryFee() === 0 ? t('cart.free_delivery', 'Бесплатно') : `${getDeliveryFee()} сум`}
                   </span>
                 </div>
 
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex justify-between text-lg font-bold text-gray-900">
-                    <span>{t('cart.total', 'Total')}</span>
+                    <span>{t('cart.total', 'Итого')}</span>
                     <span>{formatPrice ? formatPrice(getTotal()) : `${getTotal()} сум`}</span>
                   </div>
                 </div>
@@ -251,33 +251,33 @@ const CartPage = () => {
 
               {/* Error Message */}
               {checkoutError && (
-                <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
                   {checkoutError}
                 </div>
               )}
 
-              {/* Checkout Button - unified */}
+              {/* Checkout Button */}
               <button
                 onClick={handleCheckout}
                 disabled={isCheckingOut}
-                className={`btn-primary w-full justify-center ${isCheckingOut ? 'opacity-60 cursor-not-allowed' : ''}`}
+                className={`w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center ${isCheckingOut ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isCheckingOut ? (
-                  <div className="flex items-center justify-center space-x-3">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>{t('processing_order', 'Обработка заказа...')}</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>{t('processing_order', 'Оформление...')}</span>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center space-x-3">
-                    <FiCreditCard className="h-6 w-6" />
+                  <div className="flex items-center space-x-2">
+                    <FiCreditCard className="h-5 w-5" />
                     <span>{t('proceed_to_checkout', 'Оформить заказ')}</span>
                   </div>
                 )}
               </button>
 
               {/* Additional Info */}
-              <div className="mt-6 text-sm text-gray-500 text-center">
-                <p>{t('cart.checkout_agreement', 'By clicking the button, you agree to the purchase terms')}</p>
+              <div className="mt-4 text-xs text-gray-500 text-center">
+                <p>{t('cart.checkout_agreement', 'Оформляя заказ, вы соглашаетесь с условиями покупки')}</p>
               </div>
             </div>
           </div>
@@ -288,4 +288,3 @@ const CartPage = () => {
 }
 
 export default CartPage
-
