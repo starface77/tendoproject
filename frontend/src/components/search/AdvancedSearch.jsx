@@ -254,7 +254,7 @@ const AdvancedSearch = ({ onSearch, onFilterChange, initialFilters = {} }) => {
                 <option value="">{t('search.all_categories', 'Все категории')}</option>
                 {availableFilters.categories.map(category => (
                   <option key={category._id} value={category._id}>
-                    {category.name}
+                    {typeof category.name === 'object' ? category.name?.ru || category.name?.en || category.name?.uz || 'Категория' : category.name || 'Категория'}
                   </option>
                 ))}
               </select>

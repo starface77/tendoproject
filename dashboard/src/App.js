@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Layout, ConfigProvider, App as AntdApp } from 'antd';
+import { Layout, ConfigProvider, App as AntdApp, theme } from 'antd';
 import ruRU from 'antd/lib/locale/ru_RU';
 
 // Components
@@ -20,6 +20,7 @@ import Reviews from './pages/Reviews';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import Banners from './pages/Banners';
+import Sections from './pages/Sections';
 
 // Services
 import { AuthProvider, useAuth } from './services/AuthContext';
@@ -67,16 +68,23 @@ const AppLayout = () => {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sidebar collapsed={collapsed} />
-      <Layout>
+      <Layout 
+        style={{ 
+          marginLeft: collapsed ? 80 : 280,
+          transition: 'margin-left 0.3s',
+          background: '#f8fafc'
+        }}
+      >
         <Header 
           collapsed={collapsed} 
           onCollapse={() => setCollapsed(!collapsed)} 
         />
         <Content style={{ 
           margin: '16px', 
-          padding: '24px',
+          padding: '16px',
           background: '#fff',
-          borderRadius: '8px'
+          minHeight: 'calc(100vh - 140px)',
+          border: '1px solid #e2e8f0'
         }}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
@@ -87,9 +95,13 @@ const AppLayout = () => {
             <Route path="/users" element={<Users />} />
             <Route path="/seller-applications" element={<SellerApplications />} />
             <Route path="/sellers" element={<Sellers />} />
+            <Route path="/sellers/list" element={<Sellers />} />
+            <Route path="/sellers/finance" element={<div>Финансы продавцов</div>} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/banners" element={<Banners />} />
+            <Route path="/sections" element={<Sections />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/messages" element={<div>Сообщения</div>} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </Content>
@@ -105,8 +117,33 @@ function App() {
       locale={ruRU}
       theme={{
         token: {
-          colorPrimary: '#F2D024',
+          colorPrimary: '#3b82f6',
+          colorInfo: '#3b82f6',
+          colorSuccess: '#10b981',
+          colorWarning: '#f59e0b',
+          colorError: '#ef4444',
           borderRadius: 8,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        },
+        components: {
+          Menu: {
+            itemBg: 'transparent',
+            itemHoverBg: 'rgba(59, 130, 246, 0.1)',
+            itemSelectedBg: 'rgba(59, 130, 246, 0.2)',
+            itemSelectedColor: '#3b82f6',
+            itemHoverColor: '#3b82f6',
+            fontSize: 15,
+          },
+          Card: {
+            borderRadiusLG: 8,
+            colorBorderSecondary: '#e2e8f0',
+          },
+          Button: {
+            borderRadius: 6,
+          },
+          Layout: {
+            siderBg: '#1A202C',
+          }
         },
       }}
     >
@@ -133,9 +170,3 @@ function App() {
 }
 
 export default App;
-
-
-
-
-
-

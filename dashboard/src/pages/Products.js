@@ -17,7 +17,9 @@ import {
   Row,
   Col,
   Statistic,
-  Image
+  Image,
+  Typography,
+  Divider
 } from 'antd';
 import {
   PlusOutlined,
@@ -26,10 +28,14 @@ import {
   UploadOutlined,
   EyeOutlined,
   ShoppingCartOutlined,
-  DollarOutlined
+  DollarOutlined,
+  AppstoreOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons';
 import { productsApi, categoriesApi, uploadApi } from '../services/api';
 
+const { Title, Text } = Typography;
 // const { Option } = Select; // Больше не нужен
 const { TextArea } = Input;
 
@@ -206,103 +212,101 @@ const Products = () => {
     }
   };
 
-  // Колонки таблицы
+  // Форматирование валюты
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('ru-RU').format(amount) + ' сум';
+  };
+
+  // Столбцы таблицы
   const columns = [
     {
       title: 'Изображение',
       dataIndex: 'image',
       key: 'image',
-      width: 80,
-      render: (image, record) => {
-        const imageUrl = image || (record.images && record.images[0]);
-        return imageUrl ? (
-          <Image
-            width={50}
-            height={50}
-            src={imageUrl}
-            style={{ objectFit: 'cover' }}
-            placeholder={<div style={{ width: 50, height: 50, background: '#f0f0f0' }}>No Image</div>}
-          />
-        ) : (
-          <div style={{ width: 50, height: 50, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            No Image
-          </div>
-        );
-      },
+      width: 100,
+      render: (image) => (
+        <Image
+          src={image}
+          alt="Product"
+          width={60}
+          height={60}
+          style={{ objectFit: 'cover', borderRadius: '8px' }}
+          fallback="https://placehold.co/60x60?text=Нет+изображения"
+        />
+      ),
     },
     {
       title: 'Название',
       dataIndex: 'name',
       key: 'name',
-      render: (text) => {
-        const displayName = text?.ru || text?.en || text || 'Без названия';
-        return <strong>{displayName}</strong>;
-      },
+      render: (name) => name?.ru || name?.en || name || 'Без названия',
     },
     {
       title: 'Категория',
       dataIndex: 'category',
       key: 'category',
-      render: (category) => {
-        if (typeof category === 'object' && category?.name) {
-          const categoryName = category.name?.ru || category.name?.en || category.name || 'Без названия';
-          return <Tag color="blue">{categoryName}</Tag>;
-        }
-        return <Tag color="default">Без категории</Tag>;
-      },
-    },
-    {
-      title: 'Бренд',
-      dataIndex: 'brand',
-      key: 'brand',
+      render: (category) => category?.name?.ru || category?.name?.en || category?.name || 'Не указана',
     },
     {
       title: 'Цена',
       dataIndex: 'price',
       key: 'price',
-      render: (price) => `${price?.toLocaleString()} сум`,
+      render: (price, record) => (
+        <div>
+          <div style={{ fontWeight: '600' }}>{formatCurrency(price)}</div>
+          {record.originalPrice && record.originalPrice > price && (
+            <div style={{ textDecoration: 'line-through', color: '#999', fontSize: '12px' }}>
+              {formatCurrency(record.originalPrice)}
+            </div>
+          )}
+        </div>
+      ),
     },
     {
       title: 'Статус',
-      key: 'status',
-      render: (_, record) => (
-        <Space>
-          <Switch
-            checked={record.isActive !== false}
-            onChange={(checked) => handleToggleStatus(record._id || record.id, checked)}
-            checkedChildren="Активен"
-            unCheckedChildren="Неактивен"
-          />
-          {record.inStock !== false && <Tag color="green">В наличии</Tag>}
-          {record.isNew && <Tag color="orange">Новинка</Tag>}
-          {record.featured && <Tag color="purple">Рекомендуемый</Tag>}
-        </Space>
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (isActive) => (
+        <Tag icon={isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />} 
+             color={isActive ? 'success' : 'error'}>
+          {isActive ? 'Активен' : 'Неактивен'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'В наличии',
+      dataIndex: 'inStock',
+      key: 'inStock',
+      render: (inStock) => (
+        <Tag color={inStock ? 'blue' : 'volcano'}>
+          {inStock ? 'Есть' : 'Нет'}
+        </Tag>
       ),
     },
     {
       title: 'Действия',
       key: 'actions',
-      width: 150,
+      width: 200,
       render: (_, record) => (
-        <Space>
-          <Button
-            icon={<EditOutlined />}
+        <Space size="middle">
+          <Button 
+            type="primary" 
+            icon={<EditOutlined />} 
             onClick={() => handleEdit(record)}
-            type="primary"
             size="small"
-          />
+          >
+            Редактировать
+          </Button>
           <Popconfirm
             title="Удалить товар?"
-            description="Это действие нельзя отменить"
+            description="Вы уверены, что хотите удалить этот товар?"
             onConfirm={() => handleDelete(record._id || record.id)}
             okText="Да"
             cancelText="Нет"
           >
-            <Button
-              icon={<DeleteOutlined />}
-              danger
-              size="small"
-            />
+            <Button icon={<DeleteOutlined />} danger size="small">
+              Удалить
+            </Button>
           </Popconfirm>
         </Space>
       ),
@@ -311,47 +315,23 @@ const Products = () => {
 
   return (
     <div>
-      {/* Статистика */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Всего товаров"
-              value={stats.total}
-              prefix={<ShoppingCartOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Активных товаров"
-              value={stats.active}
-              prefix={<EyeOutlined />}
-              valueStyle={{ color: '#3f8600' }}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Общая стоимость"
-              value={stats.totalValue}
-              prefix={<DollarOutlined />}
-              suffix="сум"
-              valueStyle={{ color: '#722ed1' }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Заголовок и кнопка добавления */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1>🛍️ Управление товарами</h1>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '24px',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
+        <div>
+          <Title level={2} style={{ margin: 0, color: '#1A202C' }}>
+            <AppstoreOutlined /> Товары
+          </Title>
+          <Text type="secondary">Управление товарами маркетплейса</Text>
+        </div>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
           onClick={handleAdd}
           size="large"
         >
@@ -359,173 +339,252 @@ const Products = () => {
         </Button>
       </div>
 
+      {/* Статистика */}
+      <Row gutter={[24, 24]} style={{ marginBottom: '24px' }}>
+        <Col xs={24} sm={12} lg={8}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            <Statistic
+              title="Всего товаров"
+              value={stats.total}
+              prefix={<AppstoreOutlined style={{ color: '#3b82f6' }} />}
+              valueStyle={{ color: '#3b82f6' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} lg={8}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            <Statistic
+              title="Активных товаров"
+              value={stats.active}
+              prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />}
+              valueStyle={{ color: '#10b981' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} lg={8}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            <Statistic
+              title="Общая стоимость"
+              value={stats.totalValue}
+              prefix={<DollarOutlined style={{ color: '#f59e0b' }} />}
+              valueStyle={{ color: '#f59e0b' }}
+              formatter={(value) => formatCurrency(value)}
+            />
+          </Card>
+        </Col>
+      </Row>
+
       {/* Таблица товаров */}
-      <Table
-        columns={columns}
-        dataSource={products}
-        rowKey={(record) => record._id || record.id}
-        loading={loading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total, range) => `${range[0]}-${range[1]} из ${total} товаров`,
+      <Card 
+        style={{ 
+          borderRadius: '16px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #e2e8f0'
         }}
-      />
+      >
+        <Table
+          dataSource={products}
+          columns={columns}
+          loading={loading}
+          rowKey={(record) => record._id || record.id}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
+          }}
+          scroll={{ x: 1000 }}
+        />
+      </Card>
 
       {/* Модал для добавления/редактирования товара */}
       <Modal
-        title={editingProduct ? '✏️ Редактировать товар' : '➕ Добавить товар'}
+        title={editingProduct ? 'Редактировать товар' : 'Добавить товар'}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
-        onOk={() => form.submit()}
-        okText="Сохранить"
-        cancelText="Отмена"
+        footer={null}
         width={800}
-        confirmLoading={loading}
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSave}
         >
-          <Form.Item
-            name="name"
-            label="Название товара"
-            rules={[{ required: true, message: 'Введите название товара' }]}
-          >
-            <Input placeholder="Например: iPhone 15 Pro Max Silicone Case" />
-          </Form.Item>
-
-          <Form.Item
-            name="description"
-            label="Описание"
-          >
-            <TextArea rows={4} placeholder="Подробное описание товара..." />
-          </Form.Item>
-
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="price"
-                label="Цена (сум)"
-                rules={[{ required: true, message: 'Введите цену' }]}
+                name="name"
+                label="Название товара"
+                rules={[{ required: true, message: 'Пожалуйста, введите название товара' }]}
               >
-                <InputNumber
-                  style={{ width: '100%' }}
-                  min={0}
-                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={value => value.replace(/\$\s?|(,*)/g, '')}
-                />
+                <Input placeholder="Введите название товара" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item
-                name="originalPrice"
-                label="Старая цена (сум)"
-              >
-                <InputNumber
-                  style={{ width: '100%' }}
-                  min={0}
-                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={value => value.replace(/\$\s?|(,*)/g, '')}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
+            
             <Col span={12}>
               <Form.Item
                 name="category"
                 label="Категория"
-                rules={[{ required: true, message: 'Выберите категорию' }]}
+                rules={[{ required: true, message: 'Пожалуйста, выберите категорию' }]}
               >
-                <select 
-                  style={{
-                    width: '100%',
-                    height: '32px',
-                    padding: '4px 11px',
-                    border: '1px solid #d9d9d9',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    backgroundColor: '#fff'
-                  }}
-                  onChange={(e) => {
-                    form.setFieldsValue({ category: e.target.value });
-                  }}
-                  value={form.getFieldValue('category') || ''}
+                <Select 
+                  placeholder="Выберите категорию"
+                  showSearch
+                  optionFilterProp="children"
                 >
-                  <option value="">Выберите категорию</option>
                   {categories.map(category => (
-                    <option key={category._id || category.id} value={category._id || category.id}>
-                      {category.name?.ru || category.name || 'Без названия'}
-                    </option>
+                    <Select.Option key={category._id || category.id} value={category._id || category.id}>
+                      {category.name?.ru || category.name?.en || category.name}
+                    </Select.Option>
                   ))}
-                </select>
+                </Select>
               </Form.Item>
             </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                name="price"
+                label="Цена"
+                rules={[{ required: true, message: 'Пожалуйста, введите цену' }]}
+              >
+                <InputNumber
+                  style={{ width: '100%' }}
+                  placeholder="Введите цену"
+                  min={0}
+                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}
+                  parser={value => value.replace(/\s?/g, '')}
+                />
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                name="originalPrice"
+                label="Оригинальная цена"
+              >
+                <InputNumber
+                  style={{ width: '100%' }}
+                  placeholder="Введите оригинальную цену"
+                  min={0}
+                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}
+                  parser={value => value.replace(/\s?/g, '')}
+                />
+              </Form.Item>
+            </Col>
+            
+            <Col span={24}>
+              <Form.Item
+                name="description"
+                label="Описание"
+              >
+                <TextArea 
+                  placeholder="Введите описание товара" 
+                  rows={4} 
+                />
+              </Form.Item>
+            </Col>
+            
             <Col span={12}>
               <Form.Item
                 name="brand"
                 label="Бренд"
               >
-                <Input placeholder="Apple, Samsung, Xiaomi..." />
+                <Input placeholder="Введите бренд" />
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                name="isActive"
+                label="Активен"
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                name="inStock"
+                label="В наличии"
+                valuePropName="checked"
+              >
+                <Switch defaultChecked />
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                name="isNew"
+                label="Новинка"
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+            </Col>
+            
+            <Col span={24}>
+              <Form.Item
+                name="images"
+                label="Изображения"
+              >
+                <Upload
+                  listType="picture-card"
+                  fileList={fileList}
+                  customRequest={({ file, onSuccess, onError }) => {
+                    handleUpload(file).then(result => {
+                      if (result) {
+                        onSuccess(result, file);
+                      } else {
+                        onError(new Error('Upload failed'));
+                      }
+                    });
+                  }}
+                  onChange={({ fileList }) => setFileList(fileList)}
+                  multiple
+                >
+                  {fileList.length >= 8 ? null : (
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>Загрузить</div>
+                    </div>
+                  )}
+                </Upload>
               </Form.Item>
             </Col>
           </Row>
-
-          <Form.Item label="Изображения">
-            <Upload
-              listType="picture-card"
-              fileList={fileList}
-              onChange={({ fileList: newFileList }) => setFileList(newFileList)}
-              customRequest={async ({ file, onSuccess, onError }) => {
-                try {
-                  const uploadedFile = await handleUpload(file);
-                  if (uploadedFile) {
-                    onSuccess(uploadedFile.url, file);
-                  } else {
-                    onError(new Error('Upload failed'));
-                  }
-                } catch (error) {
-                  onError(error);
-                }
-              }}
-              onPreview={(file) => {
-                window.open(file.url || file.preview, '_blank');
-              }}
-            >
-              {fileList.length >= 5 ? null : (
-                <div>
-                  <UploadOutlined />
-                  <div style={{ marginTop: 8 }}>Загрузить</div>
-                </div>
-              )}
-            </Upload>
+          
+          <Divider />
+          
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                Сохранить
+              </Button>
+              <Button onClick={() => setModalVisible(false)}>
+                Отмена
+              </Button>
+            </Space>
           </Form.Item>
-
-          <Row gutter={16}>
-            <Col span={6}>
-              <Form.Item name="isActive" valuePropName="checked" initialValue={true}>
-                <Switch checkedChildren="Активен" unCheckedChildren="Неактивен" />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="inStock" valuePropName="checked" initialValue={true}>
-                <Switch checkedChildren="В наличии" unCheckedChildren="Нет в наличии" />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="isNew" valuePropName="checked">
-                <Switch checkedChildren="Новинка" unCheckedChildren="Обычный" />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="featured" valuePropName="checked">
-                <Switch checkedChildren="Рекомендуемый" unCheckedChildren="Обычный" />
-              </Form.Item>
-            </Col>
-          </Row>
         </Form>
       </Modal>
     </div>

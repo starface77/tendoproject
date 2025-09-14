@@ -5,42 +5,45 @@ import {
   Modal,
   Form,
   Input,
+  InputNumber,
+  Upload,
   message,
   Space,
   Popconfirm,
+  Switch,
   Card,
   Row,
   Col,
   Statistic,
-  Upload,
-  Avatar
+  Image,
+  Typography,
+  Divider,
+  Tag
 } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
   UploadOutlined,
+  TagsOutlined,
   AppstoreOutlined,
-  EyeOutlined
+  CheckCircleOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons';
 import { categoriesApi, uploadApi } from '../services/api';
 
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const Categories = () => {
-  // Состояния
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [form] = Form.useForm();
-  const [iconFile, setIconFile] = useState(null);
-  const [stats, setStats] = useState({
-    total: 0,
-    withProducts: 0
-  });
+  const [fileList, setFileList] = useState([]);
 
-  // Загрузка данных при монтировании
+  // Загрузка категорий при монтировании
   useEffect(() => {
     loadCategories();
   }, []);
@@ -50,14 +53,7 @@ const Categories = () => {
     try {
       setLoading(true);
       const response = await categoriesApi.getAll();
-      const categoryList = response.categories || response.data || [];
-      setCategories(categoryList);
-      
-      // Вычисляем статистику
-      const total = categoryList.length;
-      const withProducts = categoryList.filter(c => (c.productCount || 0) > 0).length;
-      setStats({ total, withProducts });
-      
+      setCategories(response.categories || response.data || []);
     } catch (error) {
       message.error('Ошибка загрузки категорий: ' + error.message);
     } finally {
@@ -69,7 +65,7 @@ const Categories = () => {
   const handleAdd = () => {
     setEditingCategory(null);
     setModalVisible(true);
-    setIconFile(null);
+    setFileList([]);
     form.resetFields();
   };
 
@@ -80,20 +76,24 @@ const Categories = () => {
     
     // Заполняем форму данными категории
     form.setFieldsValue({
-      name: category.name?.ru || category.name?.en || category.name || '',
-      description: category.description?.ru || category.description?.en || category.description || '',
+      nameRu: category.name?.ru || '',
+      nameEn: category.name?.en || '',
+      descriptionRu: category.description?.ru || '',
+      descriptionEn: category.description?.en || '',
+      sortOrder: category.sortOrder || 0,
+      isActive: category.isActive !== false,
     });
 
-    // Устанавливаем иконку
-    if (category.icon) {
-      setIconFile({
+    // Устанавливаем изображение
+    if (category.image) {
+      setFileList([{
         uid: 0,
-        name: 'icon.jpg',
+        name: 'image.jpg',
         status: 'done',
-        url: category.icon,
-      });
+        url: category.image,
+      }]);
     } else {
-      setIconFile(null);
+      setFileList([]);
     }
   };
 
@@ -108,21 +108,21 @@ const Categories = () => {
     }
   };
 
-  // Обработка загрузки иконки
-  const handleIconUpload = async (file) => {
+  // Обработка загрузки изображения
+  const handleUpload = async (file) => {
     try {
       const response = await uploadApi.uploadImage(file, 'category');
-      const iconUrl = response.imageUrl || response.url;
+      const imageUrl = response.imageUrl || response.url;
       
       return {
         uid: file.uid,
         name: file.name,
         status: 'done',
-        url: iconUrl,
-        response: iconUrl
+        url: imageUrl,
+        response: imageUrl
       };
     } catch (error) {
-      message.error('Ошибка загрузки иконки: ' + error.message);
+      message.error('Ошибка загрузки изображения: ' + error.message);
       return false;
     }
   };
@@ -132,9 +132,23 @@ const Categories = () => {
     try {
       setLoading(true);
 
+      // Получаем URL изображения
+      const image = fileList.length > 0 && fileList[0].status === 'done' 
+        ? (fileList[0].url || fileList[0].response) 
+        : null;
+
       const categoryData = {
-        ...values,
-        icon: iconFile?.url || iconFile?.response || null,
+        name: {
+          ru: values.nameRu,
+          en: values.nameEn
+        },
+        description: {
+          ru: values.descriptionRu,
+          en: values.descriptionEn
+        },
+        sortOrder: values.sortOrder,
+        isActive: values.isActive,
+        image: image
       };
 
       if (editingCategory) {
@@ -154,75 +168,77 @@ const Categories = () => {
     }
   };
 
-  // Колонки таблицы
+  // Столбцы таблицы
   const columns = [
     {
-      title: 'Иконка',
-      dataIndex: 'icon',
-      key: 'icon',
-      width: 80,
-      render: (icon, record) => (
-        icon ? (
-          <Avatar src={icon} size={40} />
-        ) : (
-          <Avatar 
-            style={{ backgroundColor: '#f0f0f0', color: '#999' }} 
-            size={40}
-            icon={<AppstoreOutlined />}
-          />
-        )
+      title: 'Изображение',
+      dataIndex: 'image',
+      key: 'image',
+      width: 100,
+      render: (image) => (
+        <Image
+          src={image}
+          alt="Category"
+          width={60}
+          height={60}
+          style={{ objectFit: 'cover', borderRadius: '8px' }}
+          fallback="https://placehold.co/60x60?text=Нет+изображения"
+        />
       ),
     },
     {
-      title: 'Название',
+      title: 'Название (RU)',
       dataIndex: 'name',
-      key: 'name',
-      render: (text) => {
-        const displayName = text?.ru || text?.en || text || 'Без названия';
-        return <strong>{displayName}</strong>;
-      },
+      key: 'nameRu',
+      render: (name) => name?.ru || 'Не указано',
     },
     {
-      title: 'Описание',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
-      render: (text) => {
-        const displayDescription = text?.ru || text?.en || text || '';
-        return displayDescription;
-      },
+      title: 'Название (EN)',
+      dataIndex: 'name',
+      key: 'nameEn',
+      render: (name) => name?.en || 'Не указано',
     },
     {
-      title: 'Товаров',
-      dataIndex: 'productCount',
-      key: 'productCount',
+      title: 'Порядок',
+      dataIndex: 'sortOrder',
+      key: 'sortOrder',
       width: 100,
-      render: (count) => count || 0,
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (isActive) => (
+        <Tag icon={isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />} 
+             color={isActive ? 'success' : 'error'}>
+          {isActive ? 'Активна' : 'Неактивна'}
+        </Tag>
+      ),
     },
     {
       title: 'Действия',
       key: 'actions',
-      width: 150,
+      width: 200,
       render: (_, record) => (
-        <Space>
-          <Button
-            icon={<EditOutlined />}
+        <Space size="middle">
+          <Button 
+            type="primary" 
+            icon={<EditOutlined />} 
             onClick={() => handleEdit(record)}
-            type="primary"
             size="small"
-          />
+          >
+            Редактировать
+          </Button>
           <Popconfirm
             title="Удалить категорию?"
-            description="Это действие нельзя отменить"
+            description="Вы уверены, что хотите удалить эту категорию?"
             onConfirm={() => handleDelete(record._id || record.id)}
             okText="Да"
             cancelText="Нет"
           >
-            <Button
-              icon={<DeleteOutlined />}
-              danger
-              size="small"
-            />
+            <Button icon={<DeleteOutlined />} danger size="small">
+              Удалить
+            </Button>
           </Popconfirm>
         </Space>
       ),
@@ -231,45 +247,23 @@ const Categories = () => {
 
   return (
     <div>
-      {/* Статистика */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Всего категорий"
-              value={stats.total}
-              prefix={<AppstoreOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="С товарами"
-              value={stats.withProducts}
-              prefix={<EyeOutlined />}
-              valueStyle={{ color: '#3f8600' }}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Пустых категорий"
-              value={stats.total - stats.withProducts}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Заголовок и кнопка добавления */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1>📂 Управление категориями</h1>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '24px',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
+        <div>
+          <Title level={2} style={{ margin: 0, color: '#1A202C' }}>
+            <TagsOutlined /> Категории
+          </Title>
+          <Text type="secondary">Управление категориями товаров</Text>
+        </div>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
           onClick={handleAdd}
           size="large"
         >
@@ -277,80 +271,188 @@ const Categories = () => {
         </Button>
       </div>
 
+      {/* Статистика */}
+      <Row gutter={[24, 24]} style={{ marginBottom: '24px' }}>
+        <Col xs={24} sm={12} lg={8}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            <Statistic
+              title="Всего категорий"
+              value={categories.length}
+              prefix={<TagsOutlined style={{ color: '#3b82f6' }} />}
+              valueStyle={{ color: '#3b82f6' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} lg={8}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            <Statistic
+              title="Активных категорий"
+              value={categories.filter(c => c.isActive !== false).length}
+              prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />}
+              valueStyle={{ color: '#10b981' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
       {/* Таблица категорий */}
-      <Table
-        columns={columns}
-        dataSource={categories}
-        rowKey={(record) => record._id || record.id}
-        loading={loading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total, range) => `${range[0]}-${range[1]} из ${total} категорий`,
+      <Card 
+        style={{ 
+          borderRadius: '16px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #e2e8f0'
         }}
-      />
+      >
+        <Table
+          dataSource={categories}
+          columns={columns}
+          loading={loading}
+          rowKey={(record) => record._id || record.id}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
+          }}
+          scroll={{ x: 800 }}
+        />
+      </Card>
 
       {/* Модал для добавления/редактирования категории */}
       <Modal
-        title={editingCategory ? '✏️ Редактировать категорию' : '➕ Добавить категорию'}
+        title={editingCategory ? 'Редактировать категорию' : 'Добавить категорию'}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
-        onOk={() => form.submit()}
-        okText="Сохранить"
-        cancelText="Отмена"
-        width={600}
-        confirmLoading={loading}
+        footer={null}
+        width={700}
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSave}
         >
-          <Form.Item
-            name="name"
-            label="Название категории"
-            rules={[{ required: true, message: 'Введите название категории' }]}
-          >
-            <Input placeholder="Например: iPhone" />
-          </Form.Item>
-
-          <Form.Item
-            name="description"
-            label="Описание"
-          >
-            <TextArea rows={3} placeholder="Краткое описание категории..." />
-          </Form.Item>
-
-          <Form.Item label="Иконка категории">
-            <Upload
-              listType="picture-card"
-              maxCount={1}
-              fileList={iconFile ? [iconFile] : []}
-              onChange={({ fileList }) => setIconFile(fileList[0] || null)}
-              customRequest={async ({ file, onSuccess, onError }) => {
-                try {
-                  const uploadedFile = await handleIconUpload(file);
-                  if (uploadedFile) {
-                    setIconFile(uploadedFile);
-                    onSuccess(uploadedFile.url, file);
-                  } else {
-                    onError(new Error('Upload failed'));
-                  }
-                } catch (error) {
-                  onError(error);
-                }
-              }}
-              onPreview={(file) => {
-                window.open(file.url || file.preview, '_blank');
-              }}
-            >
-              {!iconFile && (
-                <div>
-                  <UploadOutlined />
-                  <div style={{ marginTop: 8 }}>Загрузить</div>
-                </div>
-              )}
-            </Upload>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="nameRu"
+                label="Название категории (RU)"
+                rules={[{ required: true, message: 'Пожалуйста, введите название категории на русском' }]}
+              >
+                <Input placeholder="Введите название категории на русском" />
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                name="nameEn"
+                label="Название категории (EN)"
+                rules={[{ required: true, message: 'Пожалуйста, введите название категории на английском' }]}
+              >
+                <Input placeholder="Введите название категории на английском" />
+              </Form.Item>
+            </Col>
+            
+            <Col span={24}>
+              <Form.Item
+                name="descriptionRu"
+                label="Описание (RU)"
+              >
+                <TextArea 
+                  placeholder="Введите описание категории на русском" 
+                  rows={3} 
+                />
+              </Form.Item>
+            </Col>
+            
+            <Col span={24}>
+              <Form.Item
+                name="descriptionEn"
+                label="Описание (EN)"
+              >
+                <TextArea 
+                  placeholder="Введите описание категории на английском" 
+                  rows={3} 
+                />
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                name="sortOrder"
+                label="Порядок сортировки"
+              >
+                <InputNumber
+                  style={{ width: '100%' }}
+                  placeholder="Введите порядок сортировки"
+                  min={0}
+                />
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                name="isActive"
+                label="Активна"
+                valuePropName="checked"
+              >
+                <Switch defaultChecked />
+              </Form.Item>
+            </Col>
+            
+            <Col span={24}>
+              <Form.Item
+                name="image"
+                label="Изображение"
+              >
+                <Upload
+                  listType="picture-card"
+                  fileList={fileList}
+                  customRequest={({ file, onSuccess, onError }) => {
+                    handleUpload(file).then(result => {
+                      if (result) {
+                        onSuccess(result, file);
+                      } else {
+                        onError(new Error('Upload failed'));
+                      }
+                    });
+                  }}
+                  onChange={({ fileList }) => setFileList(fileList)}
+                  multiple={false}
+                >
+                  {fileList.length >= 1 ? null : (
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>Загрузить</div>
+                    </div>
+                  )}
+                </Upload>
+              </Form.Item>
+            </Col>
+          </Row>
+          
+          <Divider />
+          
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                Сохранить
+              </Button>
+              <Button onClick={() => setModalVisible(false)}>
+                Отмена
+              </Button>
+            </Space>
           </Form.Item>
         </Form>
       </Modal>

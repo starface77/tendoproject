@@ -426,4 +426,32 @@ export const authApi = {
   }
 };
 
+// 🏠 SECTIONS API
+export const sectionsApi = {
+  // Получить все секции для админки
+  getAdminSections: async () => {
+    return adminApi.get('/sections/admin');
+  },
+
+  // Получить публичные секции
+  getSections: async () => {
+    return adminApi.get('/sections');
+  },
+
+  // Создать новую секцию
+  createSection: async (data) => {
+    return adminApi.post('/sections', data);
+  },
+
+  // Обновить секцию
+  updateSection: async (id, data) => {
+    return adminApi.put(`/sections/${id}`, data);
+  },
+
+  // Удалить секцию
+  deleteSection: async (id) => {
+    return adminApi.delete(`/sections/${id}`);
+  }
+};
+
 export default adminApi;

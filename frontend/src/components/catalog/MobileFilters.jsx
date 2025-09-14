@@ -115,7 +115,7 @@ const MobileFilters = ({
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <span className="text-lg">{category.icon}</span>
-                          <span className="font-medium">{category.name}</span>
+                          <span className="font-medium">{typeof category.name === 'object' ? category.name?.ru || category.name?.en || category.name?.uz || 'Категория' : category.name || 'Категория'}</span>
                         </div>
                         {category.count && (
                           <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">

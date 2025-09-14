@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form, Input, Button, Card, message, Typography, Space } from 'antd';
-import { UserOutlined, LockOutlined, CrownOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, HomeOutlined } from '@ant-design/icons';
 import { useAuth } from '../services/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -26,7 +26,7 @@ const Login = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #F2D024 0%, #D69E2E 100%)',
+      background: '#f8fafc',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -36,16 +36,16 @@ const Login = () => {
         style={{
           width: '100%',
           maxWidth: 400,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-          borderRadius: '16px'
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0'
         }}
-        bodyStyle={{ padding: '40px' }}
+        bodyStyle={{ padding: '30px' }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <Space direction="vertical" size="small">
-            <CrownOutlined style={{ fontSize: '48px', color: '#F2D024' }} />
-            <Title level={2} style={{ margin: 0, color: '#1A202C' }}>
-              Chexol.uz
+            <HomeOutlined style={{ fontSize: '36px', color: '#3b82f6' }} />
+            <Title level={3} style={{ margin: 0, color: '#1A202C' }}>
+              Tendo Market
             </Title>
             <Text type="secondary">Админ панель</Text>
           </Space>
@@ -58,8 +58,8 @@ const Login = () => {
           autoComplete="off"
           layout="vertical"
           initialValues={{
-            email: '',
-            password: ''
+            email: 'admin@tendo.uz',
+            password: 'admin123456'
           }}
         >
           <Form.Item
@@ -72,8 +72,8 @@ const Login = () => {
           >
             <Input
               prefix={<UserOutlined />}
-              placeholder="admin@chexol.uz"
-              size="large"
+              placeholder="admin@tendo.uz"
+              size="middle"
             />
           </Form.Item>
 
@@ -85,23 +85,20 @@ const Login = () => {
             <Input.Password
               prefix={<LockOutlined />}
               placeholder="Введите пароль"
-              size="large"
+              size="middle"
             />
           </Form.Item>
 
-          <Form.Item style={{ marginBottom: 0, marginTop: '24px' }}>
+          <Form.Item style={{ marginBottom: 0, marginTop: '16px' }}>
             <Button
               type="primary"
               htmlType="submit"
               loading={loading}
               block
-              size="large"
+              size="middle"
               style={{
-                background: '#F2D024',
-                borderColor: '#F2D024',
-                height: '48px',
-                fontSize: '16px',
-                fontWeight: '600'
+                height: '36px',
+                fontWeight: '500'
               }}
             >
               {loading ? 'Вход...' : 'Войти'}
@@ -111,13 +108,13 @@ const Login = () => {
 
         <div style={{ 
           textAlign: 'center', 
-          marginTop: '24px',
-          padding: '16px',
-          background: '#F8F9FA',
-          borderRadius: '8px'
+          marginTop: '16px',
+          padding: '12px',
+          background: '#f1f5f9',
+          borderRadius: '6px'
         }}>
-          <Text type="secondary" style={{ fontSize: '12px' }}>
-            Введите учетные данные администратора
+          <Text type="secondary" style={{ fontSize: '11px' }}>
+            Демо доступ: admin@tendo.uz / admin123456
           </Text>
         </div>
       </Card>

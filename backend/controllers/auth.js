@@ -118,7 +118,7 @@ const login = async (req, res) => {
     }
 
     // Проверка пароля
-    const isPasswordValid = password === user.password;
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       // await user.incLoginAttempts(); // Метод не реализован
@@ -219,7 +219,7 @@ const adminLogin = async (req, res) => {
     console.log(`🔐 Проверяем пароль для пользователя: ${user.email}`);
     console.log(`   Введенный пароль: "${password}"`);
     console.log(`   Хеш из БД: ${user.password.substring(0, 20)}...`);
-    const isMatch = password === user.password;
+    const isMatch = await bcrypt.compare(password, user.password);
     console.log(`   Результат проверки bcrypt.compare: ${isMatch}`);
 
     if (!isMatch) {

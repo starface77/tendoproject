@@ -19,7 +19,8 @@ import {
   Typography,
   Divider,
   Avatar,
-  Popconfirm
+  Popconfirm,
+  Switch
 } from 'antd';
 import {
   UserOutlined,
@@ -33,7 +34,9 @@ import {
   CrownOutlined,
   TeamOutlined,
   SecurityScanOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons';
 import { usersApi } from '../services/api';
 
@@ -204,74 +207,50 @@ const Users = () => {
     },
     {
       title: 'Статус',
-      dataIndex: 'status',
-      key: 'status',
+      dataIndex: 'isActive',
+      key: 'isActive',
       width: 120,
-      render: (status, record) => (
-        <Tag color={getStatusColor(status, record.isActive)}>
-          {getStatusText(status, record.isActive)}
+      render: (isActive) => (
+        <Tag icon={isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />} 
+             color={isActive ? 'success' : 'error'}>
+          {isActive ? 'Активен' : 'Заблокирован'}
         </Tag>
       )
     },
     {
-      title: 'Регистрация',
+      title: 'Дата регистрации',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
-      render: (date) => new Date(date).toLocaleDateString('ru-RU')
-    },
-    {
-      title: 'Последний вход',
-      dataIndex: 'lastLoginAt',
-      key: 'lastLoginAt',
-      width: 150,
-      render: (date) => date ? new Date(date).toLocaleDateString('ru-RU') : 'Никогда'
+      render: (createdAt) => (
+        <div style={{ fontSize: '12px' }}>
+          {new Date(createdAt).toLocaleDateString('ru-RU')}
+        </div>
+      )
     },
     {
       title: 'Действия',
       key: 'actions',
-      width: 180,
+      width: 200,
       render: (_, record) => (
-        <Space>
-          <Tooltip title="Посмотреть детали">
-            <Button
-              icon={<EyeOutlined />}
-              size="small"
+        <Space size="middle">
+          <Tooltip title="Просмотреть">
+            <Button 
+              icon={<EyeOutlined />} 
               onClick={() => {
                 setSelectedUser(record);
                 setDetailsVisible(true);
               }}
-            />
-          </Tooltip>
-
-          <Tooltip title="Изменить роль">
-            <Button
-              icon={<EditOutlined />}
               size="small"
-              type="primary"
-              onClick={() => {
-                setSelectedUser(record);
-                form.setFieldsValue({ role: record.role });
-                setEditModalVisible(true);
-              }}
             />
           </Tooltip>
-
-          <Tooltip title={record.isActive === false ? 'Разблокировать' : 'Заблокировать'}>
-            <Popconfirm
-              title={record.isActive === false ? 'Разблокировать пользователя?' : 'Заблокировать пользователя?'}
-              description={record.isActive === false ? 'Пользователь сможет войти в систему' : 'Пользователь не сможет войти в систему'}
-              onConfirm={() => handleStatusToggle(record._id || record.id, record.isActive)}
-              okText="Да"
-              cancelText="Нет"
-            >
-              <Button
-                icon={record.isActive === false ? <UnlockOutlined /> : <LockOutlined />}
-                size="small"
-                danger={record.isActive !== false}
-                type={record.isActive === false ? 'primary' : 'default'}
-              />
-            </Popconfirm>
+          <Tooltip title={record.isActive ? 'Заблокировать' : 'Разблокировать'}>
+            <Button 
+              icon={record.isActive ? <LockOutlined /> : <UnlockOutlined />} 
+              onClick={() => handleStatusToggle(record._id || record.id, record.isActive)}
+              danger={!record.isActive}
+              size="small"
+            />
           </Tooltip>
         </Space>
       )
@@ -280,250 +259,216 @@ const Users = () => {
 
   return (
     <div>
-      <Title level={2}>
-        <TeamOutlined /> Управление пользователями
-      </Title>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '24px',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
+        <div>
+          <Title level={2} style={{ margin: 0, color: '#1A202C' }}>
+            <TeamOutlined /> Пользователи
+          </Title>
+          <Text type="secondary">Управление пользователями маркетплейса</Text>
+        </div>
+      </div>
 
-      {/* Статистика пользователей */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={4}>
-          <Card>
+      {/* Статистика */}
+      <Row gutter={[24, 24]} style={{ marginBottom: '24px' }}>
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
-              title="Всего пользователей"
+              title="Всего"
               value={stats.total}
-              prefix={<UserOutlined />}
+              prefix={<TeamOutlined style={{ color: '#3b82f6' }} />}
+              valueStyle={{ color: '#3b82f6' }}
             />
           </Card>
         </Col>
-        <Col span={4}>
-          <Card>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
               title="Активные"
               value={stats.active}
-              valueStyle={{ color: '#52c41a' }}
-              prefix={<UnlockOutlined />}
+              prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />}
+              valueStyle={{ color: '#10b981' }}
             />
           </Card>
         </Col>
-        <Col span={4}>
-          <Card>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
               title="Заблокированные"
               value={stats.inactive}
-              valueStyle={{ color: '#ff4d4f' }}
-              prefix={<LockOutlined />}
+              prefix={<CloseCircleOutlined style={{ color: '#ef4444' }} />}
+              valueStyle={{ color: '#ef4444' }}
             />
           </Card>
         </Col>
-        <Col span={4}>
-          <Card>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
               title="Администраторы"
               value={stats.admin}
-              valueStyle={{ color: '#ff4d4f' }}
-              prefix={<CrownOutlined />}
+              prefix={<CrownOutlined style={{ color: '#f59e0b' }} />}
+              valueStyle={{ color: '#f59e0b' }}
             />
           </Card>
         </Col>
-        <Col span={4}>
-          <Card>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
               title="Продавцы"
               value={stats.seller}
-              valueStyle={{ color: '#1890ff' }}
-              prefix={<SecurityScanOutlined />}
+              prefix={<SecurityScanOutlined style={{ color: '#8b5cf6' }} />}
+              valueStyle={{ color: '#8b5cf6' }}
             />
           </Card>
         </Col>
-        <Col span={4}>
-          <Card>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
               title="Покупатели"
               value={stats.buyer}
-              valueStyle={{ color: '#52c41a' }}
-              prefix={<UserOutlined />}
+              prefix={<UserOutlined style={{ color: '#ec4899' }} />}
+              valueStyle={{ color: '#ec4899' }}
             />
           </Card>
         </Col>
       </Row>
 
-      {/* Фильтры */}
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={16} align="middle">
-          <Col>
-            <Text strong>Фильтры:</Text>
-          </Col>
-          <Col span={6}>
-            <Input.Search
-              placeholder="Поиск по имени или email..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
-              onSearch={() => fetchUsers()}
-            />
-          </Col>
-          <Col span={4}>
-            <Select
-              value={filters.status}
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters({ ...filters, status: value, page: 1 })}
-            >
-              <Option value="all">Все статусы</Option>
-              <Option value="active">Активные</Option>
-              <Option value="inactive">Заблокированные</Option>
-            </Select>
-          </Col>
-          <Col span={4}>
-            <Select
-              value={filters.role}
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters({ ...filters, role: value, page: 1 })}
-            >
-              <Option value="all">Все роли</Option>
-              <Option value="admin">Администраторы</Option>
-              <Option value="seller">Продавцы</Option>
-              <Option value="buyer">Покупатели</Option>
-            </Select>
-          </Col>
-          <Col>
-            <Button onClick={() => setFilters({ status: 'all', role: 'all', page: 1, limit: 10, search: '' })}>
-              Сбросить
-            </Button>
-          </Col>
-        </Row>
-      </Card>
-
       {/* Таблица пользователей */}
-      <Card>
+      <Card 
+        style={{ 
+          borderRadius: '16px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #e2e8f0'
+        }}
+      >
         <Table
-          columns={columns}
           dataSource={users}
+          columns={columns}
           loading={loading}
           rowKey={(record) => record._id || record.id}
           pagination={{
-            current: filters.page,
-            pageSize: filters.limit,
-            onChange: (page, pageSize) => {
-              setFilters({ ...filters, page, limit: pageSize });
-            }
+            pageSize: 10,
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
           }}
+          scroll={{ x: 1000 }}
         />
       </Card>
 
-      {/* Модалка деталей пользователя */}
+      {/* Модал для просмотра деталей пользователя */}
       <Modal
-        title={
-          <Space>
-            <UserOutlined />
-            {selectedUser?.name || selectedUser?.displayName || 'Пользователь'}
-          </Space>
-        }
+        title="Детали пользователя"
         open={detailsVisible}
         onCancel={() => setDetailsVisible(false)}
         footer={null}
-        width={800}
+        width={600}
       >
         {selectedUser && (
           <div>
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="Статус" span={2}>
-                <Tag color={getStatusColor(selectedUser.status, selectedUser.isActive)}>
-                  {getStatusText(selectedUser.status, selectedUser.isActive)}
-                </Tag>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <Avatar
+                icon={<UserOutlined />}
+                src={selectedUser.avatar}
+                size={80}
+              />
+              <Title level={4} style={{ marginTop: '16px', marginBottom: '8px' }}>
+                {selectedUser.name || selectedUser.displayName || 'Без имени'}
+              </Title>
+              <Text type="secondary">{selectedUser.email}</Text>
+            </div>
+            
+            <Descriptions column={1} bordered>
+              <Descriptions.Item label="ID">
+                {selectedUser._id || selectedUser.id}
               </Descriptions.Item>
-
-              <Descriptions.Item label="Роль" span={2}>
+              <Descriptions.Item label="Email">
+                {selectedUser.email}
+              </Descriptions.Item>
+              {selectedUser.phone && (
+                <Descriptions.Item label="Телефон">
+                  {selectedUser.phone}
+                </Descriptions.Item>
+              )}
+              <Descriptions.Item label="Роль">
                 <Tag color={getRoleColor(selectedUser.role)} icon={getRoleIcon(selectedUser.role)}>
                   {getRoleText(selectedUser.role)}
                 </Tag>
               </Descriptions.Item>
-
-              <Descriptions.Item label="Имя">
-                {selectedUser.name || selectedUser.displayName || 'Не указано'}
+              <Descriptions.Item label="Статус">
+                <Tag icon={selectedUser.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />} 
+                     color={selectedUser.isActive ? 'success' : 'error'}>
+                  {selectedUser.isActive ? 'Активен' : 'Заблокирован'}
+                </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Фамилия">
-                {selectedUser.surname || 'Не указано'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Email">
-                <MailOutlined /> {selectedUser.email}
-              </Descriptions.Item>
-              <Descriptions.Item label="Телефон">
-                <PhoneOutlined /> {selectedUser.phone || 'Не указано'}
-              </Descriptions.Item>
-
               <Descriptions.Item label="Дата регистрации">
-                <CalendarOutlined /> {new Date(selectedUser.createdAt).toLocaleString('ru-RU')}
+                {new Date(selectedUser.createdAt).toLocaleString('ru-RU')}
               </Descriptions.Item>
-              <Descriptions.Item label="Последний вход">
-                <CalendarOutlined /> {selectedUser.lastLoginAt ? new Date(selectedUser.lastLoginAt).toLocaleString('ru-RU') : 'Никогда'}
-              </Descriptions.Item>
+              {selectedUser.lastLoginAt && (
+                <Descriptions.Item label="Последний вход">
+                  {new Date(selectedUser.lastLoginAt).toLocaleString('ru-RU')}
+                </Descriptions.Item>
+              )}
             </Descriptions>
-
-            {selectedUser.address && (
-              <>
-                <Divider />
-                <Title level={5}>Адрес</Title>
-                <Text>{selectedUser.address}</Text>
-              </>
-            )}
-
-            {selectedUser.bio && (
-              <>
-                <Divider />
-                <Title level={5}>О себе</Title>
-                <Text>{selectedUser.bio}</Text>
-              </>
-            )}
-
-            {selectedUser.isActive === false && selectedUser.blockReason && (
-              <>
-                <Divider />
-                <Title level={5}>Причина блокировки:</Title>
-                <Text type="danger">{selectedUser.blockReason}</Text>
-              </>
-            )}
+            
+            <div style={{ marginTop: '24px', textAlign: 'right' }}>
+              <Button 
+                type={selectedUser.isActive ? "primary" : "default"}
+                danger={!selectedUser.isActive}
+                icon={selectedUser.isActive ? <LockOutlined /> : <UnlockOutlined />}
+                onClick={() => handleStatusToggle(selectedUser._id || selectedUser.id, selectedUser.isActive)}
+              >
+                {selectedUser.isActive ? 'Заблокировать' : 'Разблокировать'}
+              </Button>
+            </div>
           </div>
         )}
-      </Modal>
-
-      {/* Модалка изменения роли */}
-      <Modal
-        title="Изменить роль пользователя"
-        open={editModalVisible}
-        onCancel={() => {
-          setEditModalVisible(false);
-          form.resetFields();
-        }}
-        onOk={() => form.submit()}
-        confirmLoading={loading}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleRoleChange}
-        >
-          <Form.Item
-            name="role"
-            label="Роль пользователя"
-            rules={[{ required: true, message: 'Выберите роль' }]}
-          >
-            <Select>
-              <Option value="buyer">Покупатель</Option>
-              <Option value="seller">Продавец</Option>
-              <Option value="admin">Администратор</Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="reason"
-            label="Причина изменения (необязательно)"
-          >
-            <TextArea
-              rows={3}
-              placeholder="Укажите причину изменения роли..."
-            />
-          </Form.Item>
-        </Form>
       </Modal>
     </div>
   );

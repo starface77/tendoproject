@@ -97,7 +97,7 @@ favoriteSchema.statics.getUserFavorites = async function(userId, options = {}) {
   const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
   let pipeline = [
-    { $match: { user: mongoose.Types.ObjectId(userId) } },
+    { $match: { user: new mongoose.Types.ObjectId(userId) } },
     {
       $lookup: {
         from: 'products',
@@ -116,7 +116,7 @@ favoriteSchema.statics.getUserFavorites = async function(userId, options = {}) {
 
   // Add filters
   const filters = {};
-  if (category) filters['product.category'] = mongoose.Types.ObjectId(category);
+  if (category) filters['product.category'] = new mongoose.Types.ObjectId(category);
   if (minPrice) filters['product.price'] = { $gte: minPrice };
   if (maxPrice) filters['product.price'] = { ...filters['product.price'], $lte: maxPrice };
   if (tags && tags.length > 0) filters.tags = { $in: tags };
@@ -154,7 +154,7 @@ favoriteSchema.statics.getUserFavorites = async function(userId, options = {}) {
 // Static method to get favorite statistics
 favoriteSchema.statics.getUserFavoriteStats = async function(userId) {
   const stats = await this.aggregate([
-    { $match: { user: mongoose.Types.ObjectId(userId) } },
+    { $match: { user: new mongoose.Types.ObjectId(userId) } },
     {
       $lookup: {
         from: 'products',
@@ -246,5 +246,37 @@ favoriteSchema.post('save', async function() {
     }
   }
 });
+
+// Get back in stock items for user's favorites
+exports.getBackInStock = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const backInStock = await Favorite.find({
+      user: userId,
+      'notifications.backInStockEnabled': true
+    })
+    .populate('product')
+    .then(favorites => {
+      return favorites.filter(fav => 
+        fav.product && 
+        fav.product.stock > 0 && 
+        fav.product.wasOutOfStock // Now using the new field
+      );
+    });
+
+    res.json({
+      success: true,
+      data: backInStock
+    });
+  } catch (error) {
+    console.error('Get back in stock error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Ошибка сервера',
+      error: error.message
+    });
+  }
+};
 
 module.exports = mongoose.model('Favorite', favoriteSchema);

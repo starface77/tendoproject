@@ -18,6 +18,9 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const { metricsMiddleware, metricsHandler } = require('./middleware/metrics');
 
+// Импорт сервиса уведомлений об избранном
+const FavoriteNotificationService = require('./services/favoriteNotificationService');
+
 // Импорт конфигураций
 const { connectDB } = require('./config/database');
 // Queues: enable only when explicitly requested
@@ -148,17 +151,15 @@ const corsOptions = {
       'https://api.tendo.uz'
     ];
 
-    // Для разработки разрешаем localhost
-    if (process.env.NODE_ENV !== 'production') {
-      allowedOrigins.push(
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:5173',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:3001',
-        'http://127.0.0.1:5173'
-      );
-    }
+    // Для разработки всегда разрешаем localhost
+    allowedOrigins.push(
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:5173',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001',
+      'http://127.0.0.1:5173'
+    );
 
     // Разрешаем запросы без origin (например, мобильные приложения)
     if (!origin) return callback(null, true);
@@ -488,6 +489,15 @@ const startServer = async () => {
       console.log('');
     });
 
+    // 🕐 ЗАПУСК ПЛАНИРОВЩИКА УВЕДОМЛЕНИЙ (каждый час)
+    setInterval(async () => {
+      try {
+        await FavoriteNotificationService.checkAndSendAllNotifications();
+      } catch (error) {
+        console.error('❌ Ошибка планировщика уведомлений:', error);
+      }
+    }, 60 * 60 * 1000); // Каждый час
+
     // Корректное закрытие сервера
     process.on('SIGTERM', () => {
       console.log('🔄 Получен сигнал SIGTERM, закрытие сервера...');
@@ -505,7 +515,7 @@ const startServer = async () => {
       console.log('🔄 Получен сигнал SIGINT, закрытие сервера...');
       server.close((err) => {
         if (err) {
-          console.error('❌ Ошибка при закрытии сервера:', err);
+          console.error('❌ Ошибка при закрытие сервера:', err);
           process.exit(1);
         }
         console.log('✅ Сервер корректно закрыт');

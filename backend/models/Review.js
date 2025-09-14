@@ -345,7 +345,7 @@ reviewSchema.statics.getProductRating = async function(productId) {
   const result = await this.aggregate([
     { 
       $match: { 
-        product: mongoose.Types.ObjectId(productId),
+        product: new mongoose.Types.ObjectId(productId),
         isApproved: true 
       }
     },

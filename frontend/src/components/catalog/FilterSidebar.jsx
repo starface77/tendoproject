@@ -147,7 +147,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isLoading = false }) => {
           {filters.availableCategories?.map((category) => (
             <CheckboxItem
               key={category.id}
-              label={category.name}
+              label={typeof category.name === 'object' ? category.name?.ru || category.name?.en || category.name?.uz || 'Категория' : category.name || 'Категория'}
               value={category.id}
               checked={filters.categories?.includes(category.id)}
               onChange={(checked) => handleFilterChange('categories', category.id, checked)}

@@ -58,7 +58,13 @@ const RegisterPage = () => {
     if (!formData.agreeToTerms) errors.agreeToTerms = 'Необходимо согласие с условиями';
 
     setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    
+    // Возвращаем первую ошибку или null
+    const errorKeys = Object.keys(errors);
+    if (errorKeys.length > 0) {
+      return errors[errorKeys[0]];
+    }
+    return null;
   };
 
   const [formError, setFormError] = useState('')

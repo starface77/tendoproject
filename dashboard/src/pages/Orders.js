@@ -36,7 +36,9 @@ import {
   CheckOutlined,
   CloseOutlined,
   ClockCircleOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons';
 import { ordersApi, usersApi } from '../services/api';
 
@@ -196,7 +198,7 @@ const Orders = () => {
       dataIndex: 'total',
       key: 'total',
       render: (total) => (
-        <div style={{ fontWeight: 'bold', color: '#1890ff' }}>
+        <div style={{ fontWeight: 'bold', color: '#3b82f6' }}>
           {formatCurrency(total || 0)}
         </div>
       )
@@ -206,46 +208,37 @@ const Orders = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Tag color={getStatusColor(status)}>
+        <Tag color={getStatusColor(status)} icon={status === 'delivered' ? <CheckCircleOutlined /> : null}>
           {getStatusText(status)}
         </Tag>
       )
     },
     {
-      title: 'Дата заказа',
+      title: 'Дата',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date) => new Date(date).toLocaleString('ru-RU')
+      render: (createdAt) => (
+        <div style={{ fontSize: '12px' }}>
+          {new Date(createdAt).toLocaleDateString('ru-RU')}
+        </div>
+      )
     },
     {
       title: 'Действия',
       key: 'actions',
+      width: 150,
       render: (_, record) => (
-        <Space>
-          <Tooltip title="Посмотреть детали">
-            <Button
-              icon={<EyeOutlined />}
-              size="small"
+        <Space size="middle">
+          <Tooltip title="Просмотреть">
+            <Button 
+              icon={<EyeOutlined />} 
               onClick={() => {
                 setSelectedOrder(record);
                 setDetailsVisible(true);
               }}
+              size="small"
             />
           </Tooltip>
-
-          {record.status !== 'delivered' && record.status !== 'cancelled' && (
-            <Tooltip title="Изменить статус">
-              <Button
-                icon={<EditOutlined />}
-                size="small"
-                type="primary"
-                onClick={() => {
-                  setSelectedOrder(record);
-                  setStatusModalVisible(true);
-                }}
-              />
-            </Tooltip>
-          )}
         </Space>
       )
     }
@@ -253,314 +246,233 @@ const Orders = () => {
 
   return (
     <div>
-      <Title level={2}>
-        <ShoppingCartOutlined /> Управление заказами
-      </Title>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '24px',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
+        <div>
+          <Title level={2} style={{ margin: 0, color: '#1A202C' }}>
+            <ShoppingCartOutlined /> Заказы
+          </Title>
+          <Text type="secondary">Управление заказами маркетплейса</Text>
+        </div>
+      </div>
 
-      {/* Статистика заказов */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={4}>
-          <Card>
+      {/* Статистика */}
+      <Row gutter={[24, 24]} style={{ marginBottom: '24px' }}>
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
               title="Всего заказов"
               value={stats.total}
-              prefix={<ShoppingCartOutlined />}
+              prefix={<ShoppingCartOutlined style={{ color: '#3b82f6' }} />}
+              valueStyle={{ color: '#3b82f6' }}
             />
           </Card>
         </Col>
-        <Col span={4}>
-          <Card>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
-              title="Ожидают"
-              value={stats.pending}
-              valueStyle={{ color: '#fa8c16' }}
-              prefix={<ClockCircleOutlined />}
+              title="Выручка"
+              value={stats.totalRevenue}
+              prefix={<DollarOutlined style={{ color: '#10b981' }} />}
+              valueStyle={{ color: '#10b981' }}
+              formatter={(value) => formatCurrency(value)}
             />
           </Card>
         </Col>
-        <Col span={4}>
-          <Card>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
               title="В обработке"
               value={stats.processing}
-              valueStyle={{ color: '#1890ff' }}
-              prefix={<ExclamationCircleOutlined />}
+              prefix={<ClockCircleOutlined style={{ color: '#f59e0b' }} />}
+              valueStyle={{ color: '#f59e0b' }}
             />
           </Card>
         </Col>
-        <Col span={4}>
-          <Card>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
-              title="Отправлены"
-              value={stats.shipped}
-              valueStyle={{ color: '#722ed1' }}
-              prefix={<TruckOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={4}>
-          <Card>
-            <Statistic
-              title="Доставлены"
+              title="Доставлено"
               value={stats.delivered}
-              valueStyle={{ color: '#52c41a' }}
-              prefix={<CheckOutlined />}
+              prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />}
+              valueStyle={{ color: '#10b981' }}
             />
           </Card>
         </Col>
-        <Col span={4}>
-          <Card>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
-              title="Общая выручка"
-              value={stats.totalRevenue}
-              prefix={<DollarOutlined />}
-              suffix="сум"
-              valueStyle={{ color: '#cf1322' }}
+              title="Отменено"
+              value={stats.cancelled}
+              prefix={<CloseCircleOutlined style={{ color: '#ef4444' }} />}
+              valueStyle={{ color: '#ef4444' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            <Statistic
+              title="Ожидает"
+              value={stats.pending}
+              prefix={<ExclamationCircleOutlined style={{ color: '#f97316' }} />}
+              valueStyle={{ color: '#f97316' }}
             />
           </Card>
         </Col>
       </Row>
 
-      {/* Фильтры */}
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={16} align="middle">
-          <Col>
-            <Text strong>Фильтры:</Text>
-          </Col>
-          <Col span={6}>
-            <Input.Search
-              placeholder="Поиск по ID заказа или email..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
-              onSearch={() => fetchOrders()}
-            />
-          </Col>
-          <Col span={6}>
-            <Select
-              value={filters.status}
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters({ ...filters, status: value, page: 1 })}
-            >
-              <Option value="all">Все статусы</Option>
-              <Option value="pending">Ожидают</Option>
-              <Option value="processing">В обработке</Option>
-              <Option value="shipped">Отправлены</Option>
-              <Option value="delivered">Доставлены</Option>
-              <Option value="cancelled">Отменены</Option>
-            </Select>
-          </Col>
-          <Col>
-            <Button onClick={() => setFilters({ status: 'all', page: 1, limit: 10, search: '' })}>
-              Сбросить
-            </Button>
-          </Col>
-        </Row>
-      </Card>
-
       {/* Таблица заказов */}
-      <Card>
+      <Card 
+        style={{ 
+          borderRadius: '16px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #e2e8f0'
+        }}
+      >
         <Table
-          columns={columns}
           dataSource={orders}
+          columns={columns}
           loading={loading}
           rowKey={(record) => record._id || record.id}
           pagination={{
-            current: filters.page,
-            pageSize: filters.limit,
-            onChange: (page, pageSize) => {
-              setFilters({ ...filters, page, limit: pageSize });
-            }
+            pageSize: 10,
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
           }}
+          scroll={{ x: 1200 }}
         />
       </Card>
 
-      {/* Модалка деталей заказа */}
+      {/* Модал для просмотра деталей заказа */}
       <Modal
-        title={
-          <Space>
-            <EyeOutlined />
-            Детали заказа #{selectedOrder?._id?.slice(-8) || selectedOrder?.id}
-          </Space>
-        }
+        title="Детали заказа"
         open={detailsVisible}
         onCancel={() => setDetailsVisible(false)}
         footer={null}
-        width={900}
+        width={800}
       >
         {selectedOrder && (
           <div>
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="Статус" span={2}>
-                <Tag color={getStatusColor(selectedOrder.status)}>
+            <Descriptions column={2} bordered>
+              <Descriptions.Item label="ID заказа">
+                #{selectedOrder._id?.slice(-8) || selectedOrder.id}
+              </Descriptions.Item>
+              <Descriptions.Item label="Дата">
+                {new Date(selectedOrder.createdAt).toLocaleString('ru-RU')}
+              </Descriptions.Item>
+              <Descriptions.Item label="Статус">
+                <Tag color={getStatusColor(selectedOrder.status)} icon={selectedOrder.status === 'delivered' ? <CheckCircleOutlined /> : null}>
                   {getStatusText(selectedOrder.status)}
                 </Tag>
               </Descriptions.Item>
-
-              <Descriptions.Item label="Дата заказа">
-                <CalendarOutlined /> {new Date(selectedOrder.createdAt).toLocaleString('ru-RU')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Обновлено">
-                <CalendarOutlined /> {new Date(selectedOrder.updatedAt).toLocaleString('ru-RU')}
+              <Descriptions.Item label="Сумма">
+                <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>
+                  {formatCurrency(selectedOrder.total || 0)}
+                </span>
               </Descriptions.Item>
             </Descriptions>
-
-            <Divider />
-
-            <Title level={5}>Информация о покупателе</Title>
-            <Descriptions bordered column={2}>
+            
+            <Divider>Покупатель</Divider>
+            <Descriptions column={2} bordered>
               <Descriptions.Item label="Имя">
-                <UserOutlined /> {selectedOrder.customer?.name || 'Не указано'}
+                {selectedOrder.customer?.name || 'Не указано'}
               </Descriptions.Item>
               <Descriptions.Item label="Email">
-                <MailOutlined /> {selectedOrder.customer?.email || 'Не указано'}
+                {selectedOrder.customer?.email || 'Не указано'}
               </Descriptions.Item>
-
               <Descriptions.Item label="Телефон">
-                <PhoneOutlined /> {selectedOrder.customer?.phone || 'Не указано'}
+                {selectedOrder.customer?.phone || 'Не указано'}
               </Descriptions.Item>
               <Descriptions.Item label="Адрес">
-                <HomeOutlined /> {selectedOrder.shippingAddress || 'Не указано'}
+                {selectedOrder.shippingAddress ? (
+                  <div>
+                    <div>{selectedOrder.shippingAddress.street}</div>
+                    <div>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.country}</div>
+                    <div>{selectedOrder.shippingAddress.postalCode}</div>
+                  </div>
+                ) : 'Не указан'}
               </Descriptions.Item>
             </Descriptions>
-
-            <Divider />
-
-            <Title level={5}>Товары в заказе</Title>
-            <Table
-              size="small"
-              columns={[
-                {
-                  title: 'Изображение',
-                  dataIndex: 'image',
-                  key: 'image',
-                  width: 80,
-                  render: (image) => image ? (
-                    <Image width={50} height={50} src={image} style={{ objectFit: 'cover' }} />
-                  ) : <div style={{ width: 50, height: 50, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Нет</div>
-                },
-                {
-                  title: 'Название',
-                  dataIndex: 'name',
-                  key: 'name',
-                  render: (name, record) => (
-                    <div>
-                      <div style={{ fontWeight: 'bold' }}>{name}</div>
-                      {record.sku && <div style={{ fontSize: '12px', color: '#666' }}>SKU: {record.sku}</div>}
+            
+            <Divider>Товары</Divider>
+            <div>
+              {selectedOrder.items?.map((item, index) => (
+                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px 0', borderBottom: '1px solid #f0f0f0' }}>
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    width={60}
+                    height={60}
+                    style={{ objectFit: 'cover', borderRadius: '8px' }}
+                    fallback="https://placehold.co/60x60?text=Нет+изображения"
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 'bold' }}>{item.name}</div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>
+                      {item.quantity} шт. × {formatCurrency(item.price)}
                     </div>
-                  )
-                },
-                {
-                  title: 'Цена',
-                  dataIndex: 'price',
-                  key: 'price',
-                  render: (price) => formatCurrency(price)
-                },
-                {
-                  title: 'Количество',
-                  dataIndex: 'quantity',
-                  key: 'quantity',
-                  render: (qty) => qty || 1
-                },
-                {
-                  title: 'Итого',
-                  key: 'total',
-                  render: (_, record) => formatCurrency((record.price || 0) * (record.quantity || 1))
-                }
-              ]}
-              dataSource={selectedOrder.items || []}
-              pagination={false}
-              rowKey={(record, index) => index}
-            />
-
-            <Divider />
-
-            <Row gutter={16}>
-              <Col span={12}>
-                <Card size="small">
-                  <Statistic
-                    title="Сумма товаров"
-                    value={selectedOrder.subtotal || 0}
-                    formatter={(value) => formatCurrency(value)}
-                  />
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card size="small">
-                  <Statistic
-                    title="Доставка"
-                    value={selectedOrder.shippingCost || 0}
-                    formatter={(value) => formatCurrency(value)}
-                  />
-                </Card>
-              </Col>
-            </Row>
-
-            <Divider />
-
-            <Row>
-              <Col span={24}>
-                <Card size="small">
-                  <Statistic
-                    title="Итого к оплате"
-                    value={selectedOrder.total || 0}
-                    formatter={(value) => formatCurrency(value)}
-                    valueStyle={{ color: '#cf1322', fontSize: '24px' }}
-                  />
-                </Card>
-              </Col>
-            </Row>
-
-            {selectedOrder.notes && (
-              <>
-                <Divider />
-                <Title level={5}>Примечания:</Title>
-                <Text>{selectedOrder.notes}</Text>
-              </>
-            )}
+                  </div>
+                  <div style={{ fontWeight: 'bold' }}>
+                    {formatCurrency(item.price * item.quantity)}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div style={{ marginTop: '24px', textAlign: 'right' }}>
+              <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                Итого: <span style={{ color: '#3b82f6' }}>{formatCurrency(selectedOrder.total || 0)}</span>
+              </div>
+            </div>
           </div>
         )}
-      </Modal>
-
-      {/* Модалка изменения статуса */}
-      <Modal
-        title="Изменить статус заказа"
-        open={statusModalVisible}
-        onCancel={() => {
-          setStatusModalVisible(false);
-          form.resetFields();
-        }}
-        onOk={() => form.submit()}
-        confirmLoading={loading}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleStatusChange}
-        >
-          <Form.Item
-            name="status"
-            label="Новый статус"
-            rules={[{ required: true, message: 'Выберите статус' }]}
-          >
-            <Select>
-              <Option value="pending">Ожидает</Option>
-              <Option value="processing">В обработке</Option>
-              <Option value="shipped">Отправлен</Option>
-              <Option value="delivered">Доставлен</Option>
-              <Option value="cancelled">Отменен</Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="notes"
-            label="Примечания (необязательно)"
-          >
-            <TextArea
-              rows={3}
-              placeholder="Добавьте комментарий к изменению статуса..."
-            />
-          </Form.Item>
-        </Form>
       </Modal>
     </div>
   );

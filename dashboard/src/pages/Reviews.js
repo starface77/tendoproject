@@ -34,7 +34,9 @@ import {
   CalendarOutlined,
   LikeOutlined,
   DislikeOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons';
 import { reviewsApi, usersApi, productsApi } from '../services/api';
 
@@ -104,10 +106,10 @@ const Reviews = () => {
   const handleModerate = async (action, reviewId, values = {}) => {
     try {
       if (action === 'approve') {
-        await reviewsApi.approve(reviewId);
+        await reviewsApi.updateStatus(reviewId, 'approved');
         message.success('Отзыв одобрен');
       } else if (action === 'reject') {
-        await reviewsApi.reject(reviewId);
+        await reviewsApi.updateStatus(reviewId, 'rejected');
         message.success('Отзыв отклонен');
       }
 
@@ -200,10 +202,9 @@ const Reviews = () => {
       title: 'Отзыв',
       dataIndex: 'comment',
       key: 'comment',
-      ellipsis: true,
       render: (comment) => (
-        <div style={{ maxWidth: 200 }}>
-          {comment && comment.length > 100 ? `${comment.substring(0, 100)}...` : comment}
+        <div style={{ maxWidth: '300px' }}>
+          {comment?.length > 100 ? `${comment.substring(0, 100)}...` : comment}
         </div>
       )
     },
@@ -211,9 +212,9 @@ const Reviews = () => {
       title: 'Статус',
       dataIndex: 'status',
       key: 'status',
-      width: 120,
       render: (status) => (
-        <Tag color={getStatusColor(status)}>
+        <Tag icon={status === 'approved' ? <CheckCircleOutlined /> : status === 'rejected' ? <CloseCircleOutlined /> : <ExclamationCircleOutlined />} 
+             color={getStatusColor(status)}>
           {getStatusText(status)}
         </Tag>
       )
@@ -222,51 +223,52 @@ const Reviews = () => {
       title: 'Дата',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 150,
-      render: (date) => new Date(date).toLocaleString('ru-RU')
+      render: (createdAt) => (
+        <div style={{ fontSize: '12px' }}>
+          {new Date(createdAt).toLocaleDateString('ru-RU')}
+        </div>
+      )
     },
     {
       title: 'Действия',
       key: 'actions',
       width: 150,
       render: (_, record) => (
-        <Space>
-          <Tooltip title="Посмотреть детали">
-            <Button
-              icon={<EyeOutlined />}
-              size="small"
+        <Space size="middle">
+          <Tooltip title="Просмотреть">
+            <Button 
+              icon={<EyeOutlined />} 
               onClick={() => {
                 setSelectedReview(record);
                 setDetailsVisible(true);
               }}
+              size="small"
             />
           </Tooltip>
-
           {record.status === 'pending' && (
             <>
               <Tooltip title="Одобрить">
-                <Button
-                  icon={<CheckOutlined />}
-                  size="small"
-                  type="primary"
+                <Button 
+                  icon={<CheckOutlined />} 
                   onClick={() => {
                     setSelectedReview(record);
                     setModerateAction('approve');
-                    handleModerate('approve', record._id || record.id);
+                    setModerateModalVisible(true);
                   }}
+                  size="small"
+                  type="primary"
                 />
               </Tooltip>
-
               <Tooltip title="Отклонить">
-                <Button
-                  icon={<CloseOutlined />}
-                  size="small"
-                  danger
+                <Button 
+                  icon={<CloseOutlined />} 
                   onClick={() => {
                     setSelectedReview(record);
                     setModerateAction('reject');
                     setModerateModalVisible(true);
                   }}
+                  size="small"
+                  danger
                 />
               </Tooltip>
             </>
@@ -278,272 +280,258 @@ const Reviews = () => {
 
   return (
     <div>
-      <Title level={2}>
-        <MessageOutlined /> Управление отзывами
-      </Title>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '24px',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
+        <div>
+          <Title level={2} style={{ margin: 0, color: '#1A202C' }}>
+            <MessageOutlined /> Отзывы
+          </Title>
+          <Text type="secondary">Управление отзывами маркетплейса</Text>
+        </div>
+      </div>
 
-      {/* Статистика отзывов */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={5}>
-          <Card>
+      {/* Статистика */}
+      <Row gutter={[24, 24]} style={{ marginBottom: '24px' }}>
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
               title="Всего отзывов"
               value={stats.total}
-              prefix={<MessageOutlined />}
+              prefix={<MessageOutlined style={{ color: '#3b82f6' }} />}
+              valueStyle={{ color: '#3b82f6' }}
             />
           </Card>
         </Col>
-        <Col span={5}>
-          <Card>
-            <Statistic
-              title="На модерации"
-              value={stats.pending}
-              valueStyle={{ color: '#fa8c16' }}
-              prefix={<ExclamationCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={5}>
-          <Card>
-            <Statistic
-              title="Одобрено"
-              value={stats.approved}
-              valueStyle={{ color: '#52c41a' }}
-              prefix={<CheckOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={5}>
-          <Card>
-            <Statistic
-              title="Отклонено"
-              value={stats.rejected}
-              valueStyle={{ color: '#ff4d4f' }}
-              prefix={<CloseOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={4}>
-          <Card>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
             <Statistic
               title="Средний рейтинг"
               value={stats.averageRating}
-              prefix={<StarOutlined />}
-              suffix="/5"
-              valueStyle={{ color: '#1890ff' }}
+              prefix={<StarOutlined style={{ color: '#faad14' }} />}
+              valueStyle={{ color: '#faad14' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            <Statistic
+              title="На модерации"
+              value={stats.pending}
+              prefix={<ExclamationCircleOutlined style={{ color: '#f59e0b' }} />}
+              valueStyle={{ color: '#f59e0b' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            <Statistic
+              title="Одобренные"
+              value={stats.approved}
+              prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />}
+              valueStyle={{ color: '#10b981' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} lg={4}>
+          <Card 
+            style={{ 
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            <Statistic
+              title="Отклоненные"
+              value={stats.rejected}
+              prefix={<CloseCircleOutlined style={{ color: '#ef4444' }} />}
+              valueStyle={{ color: '#ef4444' }}
             />
           </Card>
         </Col>
       </Row>
 
-      {/* Фильтры */}
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={16} align="middle">
-          <Col>
-            <Text strong>Фильтры:</Text>
-          </Col>
-          <Col span={8}>
-            <Input.Search
-              placeholder="Поиск по автору или товару..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
-              onSearch={() => fetchReviews()}
-            />
-          </Col>
-          <Col span={6}>
-            <Select
-              value={filters.status}
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters({ ...filters, status: value, page: 1 })}
-            >
-              <Option value="all">Все статусы</Option>
-              <Option value="pending">На модерации</Option>
-              <Option value="approved">Одобрено</Option>
-              <Option value="rejected">Отклонено</Option>
-            </Select>
-          </Col>
-          <Col>
-            <Button onClick={() => setFilters({ status: 'all', page: 1, limit: 10, search: '' })}>
-              Сбросить
-            </Button>
-          </Col>
-        </Row>
-      </Card>
-
       {/* Таблица отзывов */}
-      <Card>
+      <Card 
+        style={{ 
+          borderRadius: '16px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #e2e8f0'
+        }}
+      >
         <Table
-          columns={columns}
           dataSource={reviews}
+          columns={columns}
           loading={loading}
           rowKey={(record) => record._id || record.id}
           pagination={{
-            current: filters.page,
-            pageSize: filters.limit,
-            onChange: (page, pageSize) => {
-              setFilters({ ...filters, page, limit: pageSize });
-            }
+            pageSize: 10,
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
           }}
+          scroll={{ x: 1200 }}
         />
       </Card>
 
-      {/* Модалка деталей отзыва */}
+      {/* Модал для просмотра деталей отзыва */}
       <Modal
-        title={
-          <Space>
-            <EyeOutlined />
-            Детали отзыва
-          </Space>
-        }
+        title="Детали отзыва"
         open={detailsVisible}
         onCancel={() => setDetailsVisible(false)}
         footer={null}
-        width={800}
+        width={700}
       >
         {selectedReview && (
           <div>
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="Статус" span={2}>
-                <Tag color={getStatusColor(selectedReview.status)}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+              <Avatar
+                icon={<UserOutlined />}
+                src={selectedReview.author?.avatar || selectedReview.user?.avatar}
+                size={60}
+              />
+              <div>
+                <Title level={4} style={{ margin: 0 }}>
+                  {selectedReview.author?.name || selectedReview.user?.name || selectedReview.authorName || 'Аноним'}
+                </Title>
+                <Text type="secondary">{selectedReview.author?.email || selectedReview.user?.email || selectedReview.authorEmail}</Text>
+              </div>
+            </div>
+            
+            <Descriptions column={2} bordered>
+              <Descriptions.Item label="Рейтинг">
+                <Rate disabled value={selectedReview.rating || 0} />
+              </Descriptions.Item>
+              <Descriptions.Item label="Статус">
+                <Tag icon={selectedReview.status === 'approved' ? <CheckCircleOutlined /> : selectedReview.status === 'rejected' ? <CloseCircleOutlined /> : <ExclamationCircleOutlined />} 
+                     color={getStatusColor(selectedReview.status)}>
                   {getStatusText(selectedReview.status)}
                 </Tag>
               </Descriptions.Item>
-
-              <Descriptions.Item label="Автор">
-                <UserOutlined /> {selectedReview.author?.name || selectedReview.user?.name || selectedReview.authorName || 'Аноним'}
+              <Descriptions.Item label="Дата">
+                {new Date(selectedReview.createdAt).toLocaleString('ru-RU')}
               </Descriptions.Item>
-              <Descriptions.Item label="Email автора">
-                {selectedReview.author?.email || selectedReview.user?.email || selectedReview.authorEmail || 'Не указан'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Товар" span={2}>
-                <ShoppingOutlined /> {selectedReview.product?.name || selectedReview.productName || 'Не указан'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Рейтинг" span={2}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Rate disabled value={selectedReview.rating || 0} />
-                  <span style={{ color: getRatingColor(selectedReview.rating), fontWeight: 'bold', fontSize: '16px' }}>
-                    {selectedReview.rating || 0}/5
-                  </span>
-                </div>
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Дата создания">
-                <CalendarOutlined /> {new Date(selectedReview.createdAt).toLocaleString('ru-RU')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Последнее обновление">
-                <CalendarOutlined /> {new Date(selectedReview.updatedAt).toLocaleString('ru-RU')}
+              <Descriptions.Item label="Товар">
+                {selectedReview.product?.name || selectedReview.productName || 'Не указан'}
               </Descriptions.Item>
             </Descriptions>
-
-            <Divider />
-
-            <Title level={5}>Текст отзыва:</Title>
-            <div style={{
-              padding: '16px',
-              background: '#f5f5f5',
-              borderRadius: '8px',
-              marginBottom: '16px'
-            }}>
-              {selectedReview.comment || 'Текст отзыва отсутствует'}
+            
+            <Divider>Отзыв</Divider>
+            <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+              <Text>{selectedReview.comment}</Text>
             </div>
-
+            
             {selectedReview.images && selectedReview.images.length > 0 && (
               <>
-                <Divider />
-                <Title level={5}>Изображения:</Title>
+                <Divider>Изображения</Divider>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {selectedReview.images.map((image, index) => (
                     <Image
                       key={index}
+                      src={image}
+                      alt={`Review image ${index + 1}`}
                       width={100}
                       height={100}
-                      src={image}
-                      style={{ objectFit: 'cover', borderRadius: '4px' }}
+                      style={{ objectFit: 'cover', borderRadius: '8px' }}
                     />
                   ))}
                 </div>
               </>
             )}
-
-            {selectedReview.helpful && (
-              <>
-                <Divider />
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Statistic
-                      title="Полезно"
-                      value={selectedReview.helpful}
-                      prefix={<LikeOutlined />}
-                      valueStyle={{ color: '#52c41a' }}
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <Statistic
-                      title="Не полезно"
-                      value={selectedReview.notHelpful || 0}
-                      prefix={<DislikeOutlined />}
-                      valueStyle={{ color: '#ff4d4f' }}
-                    />
-                  </Col>
-                </Row>
-              </>
-            )}
-
-            {selectedReview.moderatorComment && (
-              <>
-                <Divider />
-                <Title level={5}>Комментарий модератора:</Title>
-                <Text type="secondary">{selectedReview.moderatorComment}</Text>
-              </>
-            )}
+            
+            <div style={{ marginTop: '24px', textAlign: 'right' }}>
+              {selectedReview.status === 'pending' && (
+                <Space>
+                  <Button 
+                    type="primary"
+                    icon={<CheckOutlined />}
+                    onClick={() => {
+                      setSelectedReview(selectedReview);
+                      setModerateAction('approve');
+                      setModerateModalVisible(true);
+                      setDetailsVisible(false);
+                    }}
+                  >
+                    Одобрить
+                  </Button>
+                  <Button 
+                    icon={<CloseOutlined />}
+                    onClick={() => {
+                      setSelectedReview(selectedReview);
+                      setModerateAction('reject');
+                      setModerateModalVisible(true);
+                      setDetailsVisible(false);
+                    }}
+                    danger
+                  >
+                    Отклонить
+                  </Button>
+                </Space>
+              )}
+            </div>
           </div>
         )}
       </Modal>
 
-      {/* Модалка модерации */}
+      {/* Модал для модерации отзыва */}
       <Modal
-        title={
-          moderateAction === 'approve' ? 'Одобрить отзыв' :
-          moderateAction === 'reject' ? 'Отклонить отзыв' :
-          'Модерация отзыва'
-        }
+        title={moderateAction === 'approve' ? 'Одобрить отзыв' : 'Отклонить отзыв'}
         open={moderateModalVisible}
-        onCancel={() => {
-          setModerateModalVisible(false);
-          form.resetFields();
-        }}
+        onCancel={() => setModerateModalVisible(false)}
         onOk={() => form.submit()}
-        confirmLoading={loading}
+        okText={moderateAction === 'approve' ? 'Одобрить' : 'Отклонить'}
+        okType={moderateAction === 'approve' ? 'primary' : 'danger'}
+        cancelText="Отмена"
       >
         <Form
           form={form}
           layout="vertical"
-          onFinish={(values) => handleModerate(moderateAction, selectedReview._id || selectedReview.id, values)}
+          onFinish={(values) => handleModerate(moderateAction, selectedReview?._id || selectedReview?.id, values)}
         >
           {moderateAction === 'reject' && (
             <Form.Item
               name="reason"
               label="Причина отклонения"
-              rules={[{ required: true, message: 'Укажите причину отклонения' }]}
+              rules={[{ required: true, message: 'Пожалуйста, укажите причину отклонения' }]}
             >
-              <TextArea
-                rows={4}
-                placeholder="Укажите причину отклонения отзыва..."
-              />
+              <TextArea placeholder="Укажите причину отклонения отзыва" rows={3} />
             </Form.Item>
           )}
-
-          <Form.Item
-            name="moderatorComment"
-            label="Комментарий модератора (необязательно)"
-          >
-            <TextArea
-              rows={3}
-              placeholder="Дополнительный комментарий..."
-            />
-          </Form.Item>
+          <Text>
+            Вы уверены, что хотите {moderateAction === 'approve' ? 'одобрить' : 'отклонить'} этот отзыв?
+          </Text>
         </Form>
       </Modal>
     </div>

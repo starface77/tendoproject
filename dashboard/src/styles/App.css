@@ -1,16 +1,16 @@
-/* Chexol.uz Admin Panel - Custom Styles */
+/* Tendo Market Admin Panel - Minimalist Styles */
 
 /* Global Styles */
 .App {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Smooth transitions */
+/* Remove transitions for minimalist design */
 * {
-  transition: all 0.2s ease;
+  transition: none;
 }
 
-/* Custom scrollbar */
+/* Simple scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -28,33 +28,28 @@
   background: #a8a8a8;
 }
 
-/* Custom Ant Design overrides */
+/* Simple Ant Design overrides */
 .ant-layout-sider {
-  box-shadow: 2px 0 6px rgba(0, 21, 41, 0.08);
+  box-shadow: 1px 0 2px rgba(0, 0, 0, 0.05);
 }
 
 .ant-menu-dark .ant-menu-item-selected {
-  background: rgba(242, 208, 36, 0.2) !important;
-  border-radius: 8px;
-  margin: 4px 8px;
-  width: calc(100% - 16px);
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-radius: 4px;
+  margin: 2px 4px;
+  width: calc(100% - 8px);
 }
 
 .ant-menu-dark .ant-menu-item:hover {
-  background: rgba(242, 208, 36, 0.1) !important;
-  border-radius: 8px;
-  margin: 4px 8px;
-  width: calc(100% - 16px);
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-radius: 4px;
+  margin: 2px 4px;
+  width: calc(100% - 8px);
 }
 
 .ant-card {
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 1px solid #f0f0f0;
-}
-
-.ant-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .ant-statistic-title {
@@ -68,59 +63,62 @@
 }
 
 .ant-btn-primary {
-  background: #F2D024;
-  border-color: #F2D024;
-  color: #1A202C;
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
   font-weight: 500;
 }
 
 .ant-btn-primary:hover {
-  background: #D69E2E;
-  border-color: #D69E2E;
+  background: #2563eb;
+  border-color: #2563eb;
 }
 
-/* Card animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.ant-card {
-  animation: fadeInUp 0.3s ease;
-}
-
-/* Loading states */
-.ant-spin-dot-item {
-  background-color: #F2D024 !important;
-}
-
-/* Custom utility classes */
+/* Simple utility classes */
 .text-primary {
-  color: #F2D024;
+  color: #3b82f6;
 }
 
 .bg-primary {
-  background-color: #F2D024;
+  background-color: #3b82f6;
 }
 
 .border-primary {
-  border-color: #F2D024;
+  border-color: #3b82f6;
+}
+
+.text-success {
+  color: #10b981;
+}
+
+.bg-success {
+  background-color: #10b981;
+}
+
+.text-warning {
+  color: #f59e0b;
+}
+
+.bg-warning {
+  background-color: #f59e0b;
+}
+
+.text-error {
+  color: #ef4444;
+}
+
+.bg-error {
+  background-color: #ef4444;
 }
 
 /* Responsive improvements */
 @media (max-width: 768px) {
   .ant-layout-content {
     margin: 8px !important;
-    padding: 16px !important;
+    padding: 12px !important;
   }
   .ant-card {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
   .ant-table-wrapper {
     overflow-x: auto;
@@ -146,54 +144,50 @@
   }
 }
 
-/* Custom table styles */
+/* Simple table styles */
 .ant-table-thead > tr > th {
   background: #fafafa;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 1px solid #e2e8f0;
   font-weight: 600;
 }
 
 /* Status indicators */
 .status-pending {
-  color: #fa8c16;
+  color: #f59e0b;
 }
 
 .status-processing {
-  color: #1890ff;
+  color: #3b82f6;
 }
 
 .status-completed {
-  color: #52c41a;
+  color: #10b981;
 }
 
 .status-cancelled {
-  color: #ff4d4f;
+  color: #ef4444;
 }
 
-/* Dashboard specific styles */
+/* Simple dashboard styles */
 .dashboard-stat-card {
   text-align: center;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #fff 0%, #fafafa 100%);
-}
-
-.dashboard-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
-/* Chart container */
-.chart-container {
-  padding: 20px;
+  border-radius: 8px;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
 }
 
-/* Login page styles */
+/* Simple chart container */
+.chart-container {
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Simple login page styles */
 .login-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #F2D024 0%, #D69E2E 100%);
+  background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -201,23 +195,67 @@
 }
 
 .login-card {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
-/* Success states */
-.success-animation {
-  animation: successPulse 0.6s ease;
+/* Simple button styles */
+.ant-btn {
+  border-radius: 6px;
+  font-weight: 500;
 }
 
-@keyframes successPulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
+.ant-btn-lg {
+  padding: 0 16px;
+  height: 36px;
+}
+
+/* Simple input styles */
+.ant-input,
+.ant-select-selector,
+.ant-picker {
+  border-radius: 6px !important;
+}
+
+/* Simple card styles */
+.ant-card {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Simple menu styles */
+.ant-menu-inline,
+.ant-menu-vertical {
+  border: none;
+}
+
+.ant-menu-item {
+  border-radius: 4px !important;
+  margin: 2px 4px !important;
+  width: calc(100% - 8px) !important;
+}
+
+/* Simple layout styles */
+.ant-layout {
+  background: #f8fafc;
+}
+
+.ant-layout-header {
+  background: #fff !important;
+  height: 60px;
+  line-height: 60px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Simple statistic styles */
+.ant-statistic {
+  padding: 12px;
+  border-radius: 6px;
+}
+
+/* Simple divider styles */
+.ant-divider-horizontal {
+  margin: 8px 0;
 }

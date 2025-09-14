@@ -36,7 +36,11 @@ import {
   PlayCircleOutlined,
   SettingOutlined,
   BarChartOutlined,
-  EyeOutlined
+  EyeOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  MessageOutlined,
+  ShoppingCartOutlined
 } from '@ant-design/icons';
 import { sellersApi } from '../services/api';
 
@@ -187,8 +191,19 @@ function Sellers() {
       )
     },
     {
-      title: 'Статистика',
-      key: 'stats',
+      title: 'Статус',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => (
+        <Tag icon={status === 'active' ? <CheckCircleOutlined /> : <CloseCircleOutlined />} 
+             color={getStatusColor(status)}>
+          {getStatusText(status)}
+        </Tag>
+      )
+    },
+    {
+      title: 'Рейтинг',
+      key: 'rating',
       render: (_, record) => (
         <div>
           <div>
@@ -199,116 +214,25 @@ function Sellers() {
             </span>
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.stats?.totalOrders || 0} заказов
-          </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.stats?.totalProducts || 0} товаров
+            Продаж: {record.stats?.totalSales || 0}
           </div>
         </div>
       )
-    },
-    {
-      title: 'Выручка',
-      key: 'revenue',
-      render: (_, record) => (
-        <div>
-          <div style={{ fontWeight: 'bold' }}>
-            {formatCurrency(record.stats?.totalRevenue || 0)}
-          </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
-            Комиссия: {record.commissionRate}%
-          </div>
-        </div>
-      )
-    },
-    {
-      title: 'Статус',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status, record) => (
-        <div>
-          <Tag color={getStatusColor(status)}>
-            {getStatusText(status)}
-          </Tag>
-          {record.suspendedUntil && new Date(record.suspendedUntil) > new Date() && (
-            <div style={{ fontSize: '12px', color: '#fa8c16' }}>
-              До {new Date(record.suspendedUntil).toLocaleDateString('ru-RU')}
-            </div>
-          )}
-        </div>
-      )
-    },
-    {
-      title: 'Дата регистрации',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date) => new Date(date).toLocaleDateString('ru-RU')
     },
     {
       title: 'Действия',
       key: 'actions',
+      width: 150,
       render: (_, record) => (
-        <Space>
-          <Tooltip title="Посмотреть детали">
+        <Space size="middle">
+          <Tooltip title="Просмотреть">
             <Button 
               icon={<EyeOutlined />} 
-              size="small"
               onClick={() => {
                 setSelectedSeller(record);
                 setDetailsVisible(true);
               }}
-            />
-          </Tooltip>
-          
-          <Tooltip title="Изменить комиссию">
-            <Button 
-              icon={<DollarOutlined />} 
               size="small"
-              onClick={() => {
-                setSelectedSeller(record);
-                setActionType('commission');
-                form.setFieldsValue({ commissionRate: record.commissionRate });
-                setActionVisible(true);
-              }}
-            />
-          </Tooltip>
-          
-          {record.status === 'active' ? (
-            <Tooltip title="Заблокировать">
-              <Button 
-                icon={<StopOutlined />} 
-                size="small"
-                danger
-                onClick={() => {
-                  setSelectedSeller(record);
-                  setActionType('suspend');
-                  setActionVisible(true);
-                }}
-              />
-            </Tooltip>
-          ) : record.status === 'suspended' ? (
-            <Tooltip title="Разблокировать">
-              <Button 
-                icon={<PlayCircleOutlined />} 
-                size="small"
-                type="primary"
-                onClick={() => {
-                  setSelectedSeller(record);
-                  setActionType('unsuspend');
-                  handleAction({});
-                }}
-              />
-            </Tooltip>
-          ) : null}
-          
-          <Tooltip title="Аналитика">
-            <Button 
-              icon={<BarChartOutlined />} 
-              size="small"
-              onClick={() => {
-                // TODO: Открыть аналитику продавца
-                message.info('Аналитика будет добавлена в следующей версии');
-              }}
             />
           </Tooltip>
         </Space>
@@ -318,70 +242,47 @@ function Sellers() {
 
   return (
     <div>
-      <Title level={2}>
-        <ShopOutlined /> Управление продавцами
-      </Title>
-
-      {/* Фильтры */}
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={16} align="middle">
-          <Col>
-            <Text strong>Фильтры:</Text>
-          </Col>
-          <Col span={6}>
-            <Input.Search
-              placeholder="Поиск по названию или email..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
-              onSearch={() => fetchSellers()}
-            />
-          </Col>
-          <Col>
-            <Select
-              value={filters.status}
-              style={{ width: 150 }}
-              onChange={(value) => setFilters({ ...filters, status: value, page: 1 })}
-            >
-              <Option value="all">Все статусы</Option>
-              <Option value="active">Активные</Option>
-              <Option value="inactive">Неактивные</Option>
-              <Option value="suspended">Заблокированные</Option>
-              <Option value="banned">Забаненные</Option>
-            </Select>
-          </Col>
-          <Col>
-            <Button onClick={() => setFilters({ status: 'all', page: 1, limit: 10, search: '' })}>
-              Сбросить
-            </Button>
-          </Col>
-        </Row>
-      </Card>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '24px',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
+        <div>
+          <Title level={2} style={{ margin: 0, color: '#1A202C' }}>
+            <ShopOutlined /> Продавцы
+          </Title>
+          <Text type="secondary">Управление продавцами маркетплейса</Text>
+        </div>
+      </div>
 
       {/* Таблица продавцов */}
-      <Card>
+      <Card 
+        style={{ 
+          borderRadius: '16px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #e2e8f0'
+        }}
+      >
         <Table
-          columns={columns}
           dataSource={sellers}
+          columns={columns}
           loading={loading}
-          rowKey="id"
+          rowKey={(record) => record.id}
           pagination={{
-            current: filters.page,
-            pageSize: filters.limit,
-            onChange: (page, pageSize) => {
-              setFilters({ ...filters, page, limit: pageSize });
-            }
+            pageSize: 10,
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
           }}
+          scroll={{ x: 1200 }}
         />
       </Card>
 
-      {/* Модалка деталей продавца */}
+      {/* Модал для просмотра деталей продавца */}
       <Modal
-        title={
-          <Space>
-            <ShopOutlined />
-            {selectedSeller?.displayName}
-          </Space>
-        }
+        title="Детали продавца"
         open={detailsVisible}
         onCancel={() => setDetailsVisible(false)}
         footer={null}
@@ -389,138 +290,128 @@ function Sellers() {
       >
         {selectedSeller && (
           <div>
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="Статус" span={2}>
-                <Tag color={getStatusColor(selectedSeller.status)}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <Avatar
+                icon={<ShopOutlined />}
+                size={80}
+                style={{ backgroundColor: '#3b82f6' }}
+              />
+              <Title level={4} style={{ marginTop: '16px', marginBottom: '8px' }}>
+                {selectedSeller.displayName}
+              </Title>
+              <Text type="secondary">{selectedSeller.businessName}</Text>
+            </div>
+            
+            <Descriptions column={2} bordered>
+              <Descriptions.Item label="ID">
+                #{selectedSeller.id}
+              </Descriptions.Item>
+              <Descriptions.Item label="Статус">
+                <Tag icon={selectedSeller.status === 'active' ? <CheckCircleOutlined /> : <CloseCircleOutlined />} 
+                     color={getStatusColor(selectedSeller.status)}>
                   {getStatusText(selectedSeller.status)}
                 </Tag>
-                {selectedSeller.suspendedUntil && new Date(selectedSeller.suspendedUntil) > new Date() && (
-                  <Text type="warning" style={{ marginLeft: 8 }}>
-                    Заблокирован до {new Date(selectedSeller.suspendedUntil).toLocaleDateString('ru-RU')}
-                  </Text>
-                )}
-              </Descriptions.Item>
-              
-              <Descriptions.Item label="Название магазина">
-                {selectedSeller.displayName}
-              </Descriptions.Item>
-              <Descriptions.Item label="URL магазина">
-                /{selectedSeller.storeUrl}
-              </Descriptions.Item>
-              
-              <Descriptions.Item label="Юридическое название">
-                {selectedSeller.businessName}
-              </Descriptions.Item>
-              <Descriptions.Item label="Комиссия">
-                {selectedSeller.commissionRate}%
-              </Descriptions.Item>
-              
-              <Descriptions.Item label="Контактное лицо">
-                <UserOutlined /> {selectedSeller.contactName}
               </Descriptions.Item>
               <Descriptions.Item label="Email">
-                <MailOutlined /> {selectedSeller.email}
+                {selectedSeller.email}
               </Descriptions.Item>
-              
               <Descriptions.Item label="Телефон">
-                <PhoneOutlined /> {selectedSeller.phone}
+                {selectedSeller.phone}
               </Descriptions.Item>
-              <Descriptions.Item label="Веб-сайт">
+              <Descriptions.Item label="Контактное лицо">
+                {selectedSeller.contactName}
+              </Descriptions.Item>
+              <Descriptions.Item label="Сайт">
                 {selectedSeller.website ? (
-                  <><GlobalOutlined /> {selectedSeller.website}</>
+                  <a href={selectedSeller.website} target="_blank" rel="noopener noreferrer">
+                    {selectedSeller.website}
+                  </a>
                 ) : 'Не указан'}
               </Descriptions.Item>
-              
-              <Descriptions.Item label="Адрес" span={2}>
-                {selectedSeller.address}
+              <Descriptions.Item label="Адрес">
+                {selectedSeller.address || 'Не указан'}
               </Descriptions.Item>
-              
-              <Descriptions.Item label="Описание" span={2}>
-                {selectedSeller.description || 'Описание не указано'}
-              </Descriptions.Item>
-              
-              <Descriptions.Item label="Категории товаров" span={2}>
-                {selectedSeller.categories?.map(cat => (
-                  <Tag key={cat} icon={<TagsOutlined />}>{cat}</Tag>
-                ))}
+              <Descriptions.Item label="Дата регистрации">
+                {new Date(selectedSeller.createdAt).toLocaleString('ru-RU')}
               </Descriptions.Item>
             </Descriptions>
-
-            <Divider />
             
-            <Title level={5}>Статистика</Title>
-            <Row gutter={16}>
-              <Col span={6}>
-                <Statistic
-                  title="Общая выручка"
-                  value={selectedSeller.stats?.totalRevenue || 0}
-                  formatter={(value) => formatCurrency(value)}
-                  prefix={<DollarOutlined />}
-                />
+            <Divider>Статистика</Divider>
+            <Row gutter={[16, 16]}>
+              <Col span={8}>
+                <Card size="small">
+                  <Statistic
+                    title="Рейтинг"
+                    value={selectedSeller.stats?.averageRating?.toFixed(1) || 0}
+                    prefix={<StarOutlined />}
+                    valueStyle={{ color: '#faad14' }}
+                  />
+                </Card>
               </Col>
-              <Col span={6}>
-                <Statistic
-                  title="Заказов"
-                  value={selectedSeller.stats?.totalOrders || 0}
-                  prefix={<ShopOutlined />}
-                />
+              <Col span={8}>
+                <Card size="small">
+                  <Statistic
+                    title="Отзывы"
+                    value={selectedSeller.stats?.totalReviews || 0}
+                    prefix={<MessageOutlined />}
+                  />
+                </Card>
               </Col>
-              <Col span={6}>
-                <Statistic
-                  title="Товаров"
-                  value={selectedSeller.stats?.totalProducts || 0}
-                  prefix={<TagsOutlined />}
-                />
-              </Col>
-              <Col span={6}>
-                <Statistic
-                  title="Рейтинг"
-                  value={selectedSeller.stats?.averageRating || 0}
-                  precision={1}
-                  prefix={<StarOutlined />}
-                  suffix={`/ 5 (${selectedSeller.stats?.totalReviews || 0})`}
-                />
+              <Col span={8}>
+                <Card size="small">
+                  <Statistic
+                    title="Продажи"
+                    value={selectedSeller.stats?.totalSales || 0}
+                    prefix={<ShoppingCartOutlined />}
+                  />
+                </Card>
               </Col>
             </Row>
-
-            <Divider />
             
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="Дата регистрации">
-                <CalendarOutlined /> {new Date(selectedSeller.createdAt).toLocaleString('ru-RU')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Последний вход">
-                {selectedSeller.lastLoginAt ? (
-                  <><CalendarOutlined /> {new Date(selectedSeller.lastLoginAt).toLocaleString('ru-RU')}</>
-                ) : 'Никогда'}
-              </Descriptions.Item>
-            </Descriptions>
-
-            {selectedSeller.suspensionReason && (
-              <>
-                <Divider />
-                <Title level={5}>Причина блокировки:</Title>
-                <Text type="danger">{selectedSeller.suspensionReason}</Text>
-              </>
-            )}
+            <div style={{ marginTop: '24px', textAlign: 'right' }}>
+              <Space>
+                {selectedSeller.status === 'active' ? (
+                  <Button 
+                    type="primary" 
+                    danger
+                    icon={<StopOutlined />}
+                    onClick={() => {
+                      setSelectedSeller(selectedSeller);
+                      setActionType('suspend');
+                      setActionVisible(true);
+                    }}
+                  >
+                    Заблокировать
+                  </Button>
+                ) : (
+                  <Button 
+                    type="primary"
+                    icon={<PlayCircleOutlined />}
+                    onClick={() => {
+                      setSelectedSeller(selectedSeller);
+                      setActionType('unsuspend');
+                      setActionVisible(true);
+                    }}
+                  >
+                    Разблокировать
+                  </Button>
+                )}
+              </Space>
+            </div>
           </div>
         )}
       </Modal>
 
-      {/* Модалка действий */}
+      {/* Модал для действий с продавцом */}
       <Modal
-        title={
-          actionType === 'suspend' ? 'Заблокировать продавца' :
-          actionType === 'commission' ? 'Изменить комиссию' :
-          'Действие'
-        }
+        title={actionType === 'suspend' ? 'Заблокировать продавца' : 
+               actionType === 'unsuspend' ? 'Разблокировать продавца' : 
+               'Изменить комиссию'}
         open={actionVisible}
-        onCancel={() => {
-          setActionVisible(false);
-          form.resetFields();
-        }}
+        onCancel={() => setActionVisible(false)}
         onOk={() => form.submit()}
-        confirmLoading={loading}
+        okText="Подтвердить"
+        cancelText="Отмена"
       >
         <Form
           form={form}
@@ -528,44 +419,27 @@ function Sellers() {
           onFinish={handleAction}
         >
           {actionType === 'suspend' && (
-            <>
-              <Form.Item
-                name="duration"
-                label="Длительность блокировки (дни)"
-                rules={[{ required: true, message: 'Укажите длительность' }]}
-                initialValue={30}
-              >
-                <InputNumber min={1} max={365} style={{ width: '100%' }} />
-              </Form.Item>
-              
-              <Form.Item
-                name="reason"
-                label="Причина блокировки"
-                rules={[{ required: true, message: 'Укажите причину блокировки' }]}
-              >
-                <TextArea 
-                  rows={3} 
-                  placeholder="Укажите причину блокировки..."
-                />
-              </Form.Item>
-            </>
+            <Form.Item
+              name="reason"
+              label="Причина блокировки"
+              rules={[{ required: true, message: 'Пожалуйста, укажите причину блокировки' }]}
+            >
+              <TextArea placeholder="Укажите причину блокировки" rows={3} />
+            </Form.Item>
           )}
           
           {actionType === 'commission' && (
             <Form.Item
               name="commissionRate"
-              label="Комиссия (%)"
-              rules={[
-                { required: true, message: 'Укажите размер комиссии' },
-                { type: 'number', min: 0, max: 50, message: 'Комиссия должна быть от 0 до 50%' }
-              ]}
+              label="Процент комиссии (%)"
+              rules={[{ required: true, message: 'Пожалуйста, укажите процент комиссии' }]}
             >
-              <InputNumber 
-                min={0} 
-                max={50} 
-                step={0.1} 
-                style={{ width: '100%' }} 
-                addonAfter="%"
+              <InputNumber
+                style={{ width: '100%' }}
+                min={0}
+                max={100}
+                formatter={value => `${value}%`}
+                parser={value => value.replace('%', '')}
               />
             </Form.Item>
           )}
@@ -573,9 +447,6 @@ function Sellers() {
       </Modal>
     </div>
   );
-}
+};
 
 export default Sellers;
-
-
-

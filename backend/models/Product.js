@@ -77,6 +77,20 @@ const productSchema = new mongoose.Schema({
     default: true
   },
 
+  // 📊 ИСТОРИЯ НАЛИЧИЯ
+  wasOutOfStock: {
+    type: Boolean,
+    default: false
+  },
+
+  lastOutOfStockAt: {
+    type: Date
+  },
+
+  lastInStockAt: {
+    type: Date
+  },
+
   // 🖼️ ИЗОБРАЖЕНИЯ
   images: [{
     url: { type: String, required: true },
@@ -302,7 +316,20 @@ productSchema.pre('save', function(next) {
   }
 
   // Обновление статуса наличия
-  this.isInStock = this.totalStock > 0;
+  const nowInStock = this.totalStock > 0;
+  const wasInStock = this.isInStock;
+  
+  this.isInStock = nowInStock;
+  
+  // Отслеживание истории наличия
+  if (nowInStock && !wasInStock) {
+    // Товар снова в наличии
+    this.lastInStockAt = new Date();
+    this.wasOutOfStock = true;
+  } else if (!nowInStock && wasInStock) {
+    // Товар закончился
+    this.lastOutOfStockAt = new Date();
+  }
 
   // Проверка скидки
   if (this.originalPrice && this.originalPrice > this.price) {
@@ -341,4 +368,3 @@ productSchema.methods.updateRating = async function() {
 };
 
 module.exports = mongoose.model('Product', productSchema);
-

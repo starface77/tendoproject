@@ -27,6 +27,15 @@ exports.addToFavorites = async (req, res) => {
       });
     }
 
+    // Validate user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Пользователь не найден'
+      });
+    }
+
     // Check if already in favorites
     const existingFavorite = await Favorite.findOne({
       user: userId,
@@ -41,6 +50,54 @@ exports.addToFavorites = async (req, res) => {
       });
     }
 
+    // Validate tags if provided
+    if (tags) {
+      if (!Array.isArray(tags)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Теги должны быть массивом'
+        });
+      }
+      
+      // Validate each tag
+      for (const tag of tags) {
+        if (typeof tag !== 'string' || tag.trim().length === 0 || tag.trim().length > 50) {
+          return res.status(400).json({
+            success: false,
+            message: 'Каждый тег должен быть строкой от 1 до 50 символов'
+          });
+        }
+      }
+    }
+
+    // Validate priority if provided
+    if (priority !== undefined) {
+      const priorityNum = parseInt(priority);
+      if (isNaN(priorityNum) || priorityNum < 1 || priorityNum > 5) {
+        return res.status(400).json({
+          success: false,
+          message: 'Приоритет должен быть целым числом от 1 до 5'
+        });
+      }
+    }
+
+    // Validate notes if provided
+    if (notes !== undefined) {
+      if (typeof notes !== 'string') {
+        return res.status(400).json({
+          success: false,
+          message: 'Примечания должны быть строкой'
+        });
+      }
+      
+      if (notes.length > 500) {
+        return res.status(400).json({
+          success: false,
+          message: 'Примечания не должны превышать 500 символов'
+        });
+      }
+    }
+
     // Create new favorite
     const favoriteData = {
       user: userId,
@@ -48,9 +105,9 @@ exports.addToFavorites = async (req, res) => {
       priceWhenAdded: product.price
     };
 
-    if (tags) favoriteData.tags = tags;
-    if (priority) favoriteData.priority = priority;
-    if (notes) favoriteData.notes = notes;
+    if (tags) favoriteData.tags = tags.map(tag => tag.trim());
+    if (priority) favoriteData.priority = parseInt(priority);
+    if (notes) favoriteData.notes = notes.trim();
 
     const favorite = new Favorite(favoriteData);
     await favorite.save();
@@ -252,11 +309,113 @@ exports.updateFavorite = async (req, res) => {
     const userId = req.user.id;
     const { tags, priority, notes, notifications } = req.body;
 
+    // Validate that favorite exists
+    const existingFavorite = await Favorite.findOne({ user: userId, product: productId });
+    if (!existingFavorite) {
+      return res.status(404).json({
+        success: false,
+        message: 'Товар не найден в избранном'
+      });
+    }
+
     const updateData = {};
-    if (tags !== undefined) updateData.tags = tags;
-    if (priority !== undefined) updateData.priority = priority;
-    if (notes !== undefined) updateData.notes = notes;
-    if (notifications !== undefined) updateData.notifications = notifications;
+
+    // Validate and process tags if provided
+    if (tags !== undefined) {
+      if (tags === null) {
+        updateData.tags = [];
+      } else if (Array.isArray(tags)) {
+        // Validate each tag
+        for (const tag of tags) {
+          if (typeof tag !== 'string' || tag.trim().length === 0 || tag.trim().length > 50) {
+            return res.status(400).json({
+              success: false,
+              message: 'Каждый тег должен быть строкой от 1 до 50 символов'
+            });
+          }
+        }
+        updateData.tags = tags.map(tag => tag.trim());
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'Теги должны быть массивом'
+        });
+      }
+    }
+
+    // Validate and process priority if provided
+    if (priority !== undefined) {
+      if (priority === null) {
+        updateData.priority = 1;
+      } else {
+        const priorityNum = parseInt(priority);
+        if (isNaN(priorityNum) || priorityNum < 1 || priorityNum > 5) {
+          return res.status(400).json({
+            success: false,
+            message: 'Приоритет должен быть целым числом от 1 до 5'
+          });
+        }
+        updateData.priority = priorityNum;
+      }
+    }
+
+    // Validate and process notes if provided
+    if (notes !== undefined) {
+      if (notes === null) {
+        updateData.notes = '';
+      } else if (typeof notes !== 'string') {
+        return res.status(400).json({
+          success: false,
+          message: 'Примечания должны быть строкой'
+        });
+      } else if (notes.length > 500) {
+        return res.status(400).json({
+          success: false,
+          message: 'Примечания не должны превышать 500 символов'
+        });
+      } else {
+        updateData.notes = notes.trim();
+      }
+    }
+
+    // Validate and process notifications if provided
+    if (notifications !== undefined) {
+      if (notifications === null) {
+        updateData.notifications = {
+          priceDropEnabled: true,
+          backInStockEnabled: true
+        };
+      } else if (typeof notifications === 'object' && notifications !== null) {
+        const notificationUpdates = {};
+        
+        if (notifications.priceDropEnabled !== undefined) {
+          if (typeof notifications.priceDropEnabled !== 'boolean') {
+            return res.status(400).json({
+              success: false,
+              message: 'Настройка уведомлений о снижении цены должна быть булевым значением'
+            });
+          }
+          notificationUpdates.priceDropEnabled = notifications.priceDropEnabled;
+        }
+        
+        if (notifications.backInStockEnabled !== undefined) {
+          if (typeof notifications.backInStockEnabled !== 'boolean') {
+            return res.status(400).json({
+              success: false,
+              message: 'Настройка уведомлений о поступлении товара должна быть булевым значением'
+            });
+          }
+          notificationUpdates.backInStockEnabled = notifications.backInStockEnabled;
+        }
+        
+        updateData.notifications = { ...existingFavorite.notifications, ...notificationUpdates };
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'Настройки уведомлений должны быть объектом'
+        });
+      }
+    }
 
     const favorite = await Favorite.findOneAndUpdate(
       { user: userId, product: productId },
@@ -307,7 +466,7 @@ exports.getFavoriteStats = async (req, res) => {
       .limit(5);
 
     const categoriesStats = await Favorite.aggregate([
-      { $match: { user: mongoose.Types.ObjectId(userId) } },
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
       {
         $lookup: {
           from: 'products',
@@ -362,23 +521,36 @@ exports.bulkUpdateFavorites = async (req, res) => {
     const userId = req.user.id;
     const { action, productIds, updateData } = req.body;
 
+    // Validate action
     if (!['remove', 'update'].includes(action)) {
       return res.status(400).json({
         success: false,
-        message: 'Неверное действие'
+        message: 'Неверное действие. Допустимые значения: remove, update'
       });
     }
 
+    // Validate productIds
     if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Не указаны товары'
+        message: 'Не указаны товары. Массив productIds не должен быть пустым'
       });
+    }
+
+    // Validate each productId
+    for (const productId of productIds) {
+      if (!mongoose.Types.ObjectId.isValid(productId)) {
+        return res.status(400).json({
+          success: false,
+          message: `Неверный ID товара: ${productId}`
+        });
+      }
     }
 
     let result;
     
     if (action === 'remove') {
+      // For remove action, we don't need updateData
       result = await Favorite.deleteMany({
         user: userId,
         product: { $in: productIds }
@@ -395,12 +567,129 @@ exports.bulkUpdateFavorites = async (req, res) => {
         deletedCount: result.deletedCount
       });
     } else if (action === 'update') {
+      // For update action, validate updateData
+      if (!updateData || typeof updateData !== 'object') {
+        return res.status(400).json({
+          success: false,
+          message: 'Для действия update необходимо предоставить данные обновления'
+        });
+      }
+      
+      // Validate updateData fields
+      const validFields = ['tags', 'priority', 'notes', 'notifications'];
+      const updateFields = Object.keys(updateData);
+      
+      for (const field of updateFields) {
+        if (!validFields.includes(field)) {
+          return res.status(400).json({
+            success: false,
+            message: `Недопустимое поле для обновления: ${field}. Допустимые поля: ${validFields.join(', ')}`
+          });
+        }
+      }
+      
+      // Apply additional validation for each field
+      const validatedUpdateData = {};
+      
+      if (updateData.tags !== undefined) {
+        if (updateData.tags === null) {
+          validatedUpdateData.tags = [];
+        } else if (Array.isArray(updateData.tags)) {
+          // Validate each tag
+          for (const tag of updateData.tags) {
+            if (typeof tag !== 'string' || tag.trim().length === 0 || tag.trim().length > 50) {
+              return res.status(400).json({
+                success: false,
+                message: 'Каждый тег должен быть строкой от 1 до 50 символов'
+              });
+            }
+          }
+          validatedUpdateData.tags = updateData.tags.map(tag => tag.trim());
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: 'Теги должны быть массивом'
+          });
+        }
+      }
+      
+      if (updateData.priority !== undefined) {
+        if (updateData.priority === null) {
+          validatedUpdateData.priority = 1;
+        } else {
+          const priorityNum = parseInt(updateData.priority);
+          if (isNaN(priorityNum) || priorityNum < 1 || priorityNum > 5) {
+            return res.status(400).json({
+              success: false,
+              message: 'Приоритет должен быть целым числом от 1 до 5'
+            });
+          }
+          validatedUpdateData.priority = priorityNum;
+        }
+      }
+      
+      if (updateData.notes !== undefined) {
+        if (updateData.notes === null) {
+          validatedUpdateData.notes = '';
+        } else if (typeof updateData.notes !== 'string') {
+          return res.status(400).json({
+            success: false,
+            message: 'Примечания должны быть строкой'
+          });
+        } else if (updateData.notes.length > 500) {
+          return res.status(400).json({
+            success: false,
+            message: 'Примечания не должны превышать 500 символов'
+          });
+        } else {
+          validatedUpdateData.notes = updateData.notes.trim();
+        }
+      }
+      
+      if (updateData.notifications !== undefined) {
+        if (updateData.notifications === null) {
+          validatedUpdateData.notifications = {
+            priceDropEnabled: true,
+            backInStockEnabled: true
+          };
+        } else if (typeof updateData.notifications === 'object' && updateData.notifications !== null) {
+          const notificationUpdates = {};
+          
+          if (updateData.notifications.priceDropEnabled !== undefined) {
+            if (typeof updateData.notifications.priceDropEnabled !== 'boolean') {
+              return res.status(400).json({
+                success: false,
+                message: 'Настройка уведомлений о снижении цены должна быть булевым значением'
+              });
+            }
+            notificationUpdates.priceDropEnabled = updateData.notifications.priceDropEnabled;
+          }
+          
+          if (updateData.notifications.backInStockEnabled !== undefined) {
+            if (typeof updateData.notifications.backInStockEnabled !== 'boolean') {
+              return res.status(400).json({
+                success: false,
+                message: 'Настройка уведомлений о поступлении товара должна быть булевым значением'
+              });
+            }
+            notificationUpdates.backInStockEnabled = updateData.notifications.backInStockEnabled;
+          }
+          
+          validatedUpdateData.notifications = notificationUpdates;
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: 'Настройки уведомлений должны быть объектом'
+          });
+        }
+      }
+      
       result = await Favorite.updateMany(
         {
           user: userId,
           product: { $in: productIds }
         },
-        updateData,
+        validatedUpdateData,
         { runValidators: true }
       );
       
@@ -469,7 +758,7 @@ exports.getBackInStock = async (req, res) => {
       return favorites.filter(fav => 
         fav.product && 
         fav.product.stock > 0 && 
-        fav.product.wasOutOfStock // This would need to be tracked in Product model
+        fav.product.wasOutOfStock // Now using the new field
       );
     });
 

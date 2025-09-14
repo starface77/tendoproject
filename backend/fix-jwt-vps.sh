@@ -188,3 +188,5 @@ echo "3. Проверьте Nginx: sudo systemctl status nginx"
 
 
 
+
+

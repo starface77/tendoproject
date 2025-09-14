@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { FiHeart, FiTrash2, FiShoppingCart, FiArrowLeft } from 'react-icons/fi'
+import { FiHeart, FiTrash2, FiShoppingCart, FiArrowLeft, FiAlertCircle } from 'react-icons/fi'
 import ProductCard from '../components/product/ProductCard'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { useWishlist } from '../contexts/WishlistContext'
@@ -8,9 +8,10 @@ import { useCart } from '../contexts/CartContext'
 import { useLanguage } from '../contexts/LanguageContext'
 
 const WishlistPage = () => {
-  const { items: wishlistItems, removeFromWishlist, isLoading: wishlistLoading, formatPrice } = useWishlist()
+  const { items: wishlistItems, removeFromWishlist, isLoading: wishlistLoading, formatPrice, refreshWishlist, error, clearError } = useWishlist()
   const { addToCart, isInCart } = useCart()
   const { t } = useLanguage()
+  const [isRemoving, setIsRemoving] = useState({})
 
   const getItemImage = (image) => {
     if (!image) return null
@@ -34,6 +35,23 @@ const WishlistPage = () => {
       console.log('Товар добавлен в корзину:', product.name)
     } catch (error) {
       console.error('Ошибка добавления в корзину:', error)
+      alert(error.message || 'Ошибка добавления в корзину')
+    }
+  }
+
+  const handleRemoveFromWishlist = async (productId) => {
+    try {
+      setIsRemoving(prev => ({ ...prev, [productId]: true }))
+      clearError() // Clear any previous errors
+      const result = await removeFromWishlist(productId)
+      if (!result.success) {
+        alert(result.error || 'Ошибка при удалении из избранного')
+      }
+    } catch (error) {
+      console.error('Ошибка удаления из избранного:', error)
+      alert(error.message || 'Ошибка при удалении из избранного')
+    } finally {
+      setIsRemoving(prev => ({ ...prev, [productId]: false }))
     }
   }
 
@@ -64,6 +82,23 @@ const WishlistPage = () => {
               <p className="text-gray-600">{t('your_favorite_products', 'Ваши любимые товары')}</p>
             </div>
           </div>
+          
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center">
+              <FiAlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
+              <div>
+                <p className="text-red-800 font-medium">Ошибка</p>
+                <p className="text-red-600">{error}</p>
+              </div>
+              <button 
+                onClick={clearError}
+                className="ml-auto text-red-500 hover:text-red-700"
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -121,10 +156,15 @@ const WishlistPage = () => {
                     
                     {/* Remove Button */}
                     <button
-                      onClick={() => removeFromWishlist(item.id)}
-                      className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm"
+                      onClick={() => handleRemoveFromWishlist(item.id)}
+                      disabled={isRemoving[item.id]}
+                      className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm disabled:opacity-50"
                     >
-                      <FiTrash2 className="h-4 w-4" />
+                      {isRemoving[item.id] ? (
+                        <div className="w-4 h-4 border-2 border-red-200 border-t-red-500 rounded-full animate-spin"></div>
+                      ) : (
+                        <FiTrash2 className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
 
@@ -175,7 +215,3 @@ const WishlistPage = () => {
 }
 
 export default WishlistPage
-
-
-
-

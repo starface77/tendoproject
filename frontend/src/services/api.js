@@ -327,7 +327,7 @@ export const usersApi = {
   // Избранные товары
   getFavorites: async (params = {}) => {
     try {
-      const response = await api.get('/users/favorites', { params })
+      const response = await api.get('/favorites', { params })
       return response.data
     } catch (error) {
       handleApiError(error)
@@ -337,7 +337,7 @@ export const usersApi = {
   // Добавить в избранное
   addToFavorites: async (productId) => {
     try {
-      const response = await api.post('/users/favorites', { productId })
+      const response = await api.post('/favorites', { productId })
       return response.data
     } catch (error) {
       handleApiError(error)
@@ -347,7 +347,7 @@ export const usersApi = {
   // Удалить из избранного
   removeFromFavorites: async (productId) => {
     try {
-      const response = await api.delete(`/users/favorites/${productId}`)
+      const response = await api.delete(`/favorites/${productId}`)
       return response.data
     } catch (error) {
       handleApiError(error)
@@ -707,6 +707,222 @@ export const chatApi = {
   }
 }
 
+// ==================================================
+// 👨‍💼 ADMIN API
+// ==================================================
+
+export const adminApi = {
+  // Dashboard stats
+  getDashboardStats: async () => {
+    try {
+      const response = await api.get('/admin/stats')
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Analytics
+  getAnalytics: async (period = '7d') => {
+    try {
+      const response = await api.get('/admin/analytics', { params: { period } })
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Users
+  getUsers: async (params = {}) => {
+    try {
+      const response = await api.get('/admin/users', { params })
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Update user
+  updateUser: async (userId, userData) => {
+    try {
+      const response = await api.put(`/admin/users/${userId}`, userData)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Delete user
+  deleteUser: async (userId) => {
+    try {
+      const response = await api.delete(`/admin/users/${userId}`)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Products
+  getProducts: async (params = {}) => {
+    try {
+      const response = await api.get('/admin/products', { params })
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Create product
+  createProduct: async (productData) => {
+    try {
+      const response = await api.post('/admin/products', productData)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Update product
+  updateProduct: async (productId, productData) => {
+    try {
+      const response = await api.put(`/admin/products/${productId}`, productData)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Delete product
+  deleteProduct: async (productId) => {
+    try {
+      const response = await api.delete(`/admin/products/${productId}`)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Orders
+  getOrders: async (params = {}) => {
+    try {
+      const response = await api.get('/admin/orders', { params })
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Update order status
+  updateOrderStatus: async (orderId, status) => {
+    try {
+      const response = await api.put(`/admin/orders/${orderId}/status`, { status })
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Categories
+  getCategories: async (params = {}) => {
+    try {
+      const response = await api.get('/admin/categories', { params })
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Create category
+  createCategory: async (categoryData) => {
+    try {
+      const response = await api.post('/admin/categories', categoryData)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Reviews
+  getReviews: async (params = {}) => {
+    try {
+      const response = await api.get('/admin/reviews', { params })
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Update review status
+  updateReviewStatus: async (reviewId, status) => {
+    try {
+      const response = await api.put(`/admin/reviews/${reviewId}/status`, { status })
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Settings
+  getSettings: async () => {
+    try {
+      const response = await api.get('/admin/settings')
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Update settings
+  updateSettings: async (settingsData) => {
+    try {
+      const response = await api.put('/admin/settings', settingsData)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Seller applications
+  getSellerApplications: async (params = {}) => {
+    try {
+      const response = await api.get('/admin/seller-applications', { params })
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Get seller application
+  getSellerApplication: async (applicationId) => {
+    try {
+      const response = await api.get(`/admin/seller-applications/${applicationId}`)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Approve seller application
+  approveSellerApplication: async (applicationId) => {
+    try {
+      const response = await api.put(`/admin/seller-applications/${applicationId}/approve`)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // Reject seller application
+  rejectSellerApplication: async (applicationId, reason) => {
+    try {
+      const response = await api.put(`/admin/seller-applications/${applicationId}/reject`, { reason })
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  }
+}
+
 // Проверка доступности API
 export const checkApiHealth = async () => {
   try {
@@ -748,6 +964,7 @@ export default {
   seller: sellerApi,
   chat: chatApi,
   notifications: notificationsApi,
+  admin: adminApi,
   checkApiHealth,
   uploadFile
 }
